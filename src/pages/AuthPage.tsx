@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
@@ -17,6 +17,26 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0) // seconds remaining before resend is allowed
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }
+  }, [])
+
+  function startCooldown(seconds = 60) {
+    setCooldown(seconds)
+    cooldownRef.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1) {
+          clearInterval(cooldownRef.current!)
+          cooldownRef.current = null
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+  }
 
   if (session) {
     navigate('/', { replace: true })
@@ -70,8 +90,17 @@ export default function AuthPage() {
       setLoading(true)
       const { error } = await resetPassword(email)
       setLoading(false)
-      if (error) { setError(error) }
-      else { setSuccessMsg('Reset link sent — check your inbox (and spam folder).') }
+      if (error) {
+        // Surface rate-limit errors more helpfully
+        if (error.toLowerCase().includes('rate limit') || error.toLowerCase().includes('too many')) {
+          setError('Too many requests — please wait a minute before trying again.')
+        } else {
+          setError(error)
+        }
+      } else {
+        setSuccessMsg('Reset link sent — check your inbox (and spam folder).')
+        startCooldown(60)
+      }
     }
   }
 
@@ -214,11 +243,15 @@ export default function AuthPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading || !!successMsg}
+            disabled={loading || (mode === 'forgot' && cooldown > 0)}
             className="btn-neon w-full mt-2"
             style={{ padding: '12px', fontSize: '13px' }}
           >
-            {loading ? loadingLabels[mode] : submitLabels[mode]}
+            {loading
+              ? loadingLabels[mode]
+              : mode === 'forgot' && cooldown > 0
+                ? `RESEND IN ${cooldown}s`
+                : submitLabels[mode]}
           </button>
         </form>
 

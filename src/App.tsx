@@ -6,6 +6,7 @@ import AppShell from '@/components/layout/AppShell'
 import AuthPage from '@/pages/AuthPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import PlannerPage from '@/pages/PlannerPage'
+import { usePreventInputZoom } from '@/hooks/usePreventInputZoom'
 
 function ProtectedApp() {
   return (
@@ -16,6 +17,7 @@ function ProtectedApp() {
 }
 
 export default function App() {
+  usePreventInputZoom()
   return (
     <ThemeProvider>
       <AuthProvider>
