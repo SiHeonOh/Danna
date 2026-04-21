@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { PlannerProvider } from '@/context/PlannerContext'
 import AppShell from '@/components/layout/AppShell'
 import AuthPage from '@/pages/AuthPage'
+import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import PlannerPage from '@/pages/PlannerPage'
 
 function ProtectedApp() {
@@ -21,6 +22,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<AuthPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route element={<AppShell />}>
               <Route path="/" element={<ProtectedApp />} />
               <Route path="*" element={<Navigate to="/" replace />} />

@@ -3,31 +3,94 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 
+type Mode = 'login' | 'signup' | 'forgot'
+
 export default function AuthPage() {
-  const { signIn, session } = useAuth()
+  const { signIn, signUp, resetPassword, session } = useAuth()
   const { toggle, theme } = useTheme()
   const navigate = useNavigate()
+
+  const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   if (session) {
     navigate('/', { replace: true })
     return null
   }
 
+  function switchMode(next: Mode) {
+    setMode(next)
+    setError(null)
+    setSuccessMsg(null)
+    setPassword('')
+    setConfirmPassword('')
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setLoading(true)
-    const { error } = await signIn(email, password)
-    setLoading(false)
-    if (error) {
-      setError(error)
-    } else {
-      navigate('/', { replace: true })
+    setSuccessMsg(null)
+
+    if (mode === 'login') {
+      setLoading(true)
+      const { error } = await signIn(email, password)
+      setLoading(false)
+      if (error) { setError(error) }
+      else { navigate('/', { replace: true }) }
+      return
     }
+
+    if (mode === 'signup') {
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
+        return
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters.')
+        return
+      }
+      setLoading(true)
+      const { error, confirmationRequired } = await signUp(email, password)
+      setLoading(false)
+      if (error) { setError(error) }
+      else if (confirmationRequired) {
+        setSuccessMsg('Account created — check your email and click the confirmation link to activate it.')
+      } else {
+        navigate('/', { replace: true })
+      }
+      return
+    }
+
+    if (mode === 'forgot') {
+      setLoading(true)
+      const { error } = await resetPassword(email)
+      setLoading(false)
+      if (error) { setError(error) }
+      else { setSuccessMsg('Reset link sent — check your inbox (and spam folder).') }
+    }
+  }
+
+  const titles: Record<Mode, string> = {
+    login: 'SIGN IN',
+    signup: 'CREATE ACCOUNT',
+    forgot: 'RESET PASSWORD',
+  }
+
+  const submitLabels: Record<Mode, string> = {
+    login: 'ACCESS GRID',
+    signup: 'CREATE ACCOUNT',
+    forgot: 'SEND RESET LINK',
+  }
+
+  const loadingLabels: Record<Mode, string> = {
+    login: 'AUTHENTICATING...',
+    signup: 'CREATING...',
+    forgot: 'SENDING...',
   }
 
   return (
@@ -35,6 +98,7 @@ export default function AuthPage() {
       className="min-h-screen flex items-center justify-center p-4"
       style={{ background: 'var(--bg-base)' }}
     >
+      {/* Theme toggle */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
         <button className="btn-ghost" onClick={toggle}>
           {theme === 'dark' ? 'LIGHT' : 'DARK'}
@@ -50,6 +114,7 @@ export default function AuthPage() {
           padding: '40px 32px',
         }}
       >
+        {/* Logo */}
         <div className="mb-8">
           <h1
             className="font-display text-4xl mb-1"
@@ -62,7 +127,31 @@ export default function AuthPage() {
           </p>
         </div>
 
+        {/* Mode heading */}
+        <p
+          className="font-mono mb-6"
+          style={{ fontSize: 11, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}
+        >
+          {titles[mode]}
+        </p>
+
+        {/* Success state */}
+        {successMsg && (
+          <div
+            className="font-mono text-xs p-3 mb-4"
+            style={{
+              background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+              border: '1px solid var(--color-primary)',
+              color: 'var(--color-primary)',
+              lineHeight: 1.6,
+            }}
+          >
+            {successMsg}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Email */}
           <div>
             <label htmlFor="email">Email</label>
             <input
@@ -76,19 +165,39 @@ export default function AuthPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-            />
-          </div>
+          {/* Password — not shown for forgot mode */}
+          {mode !== 'forgot' && (
+            <div>
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                placeholder="••••••••"
+              />
+            </div>
+          )}
 
+          {/* Confirm password — signup only */}
+          {mode === 'signup' && (
+            <div>
+              <label htmlFor="confirmPassword">Confirm password</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                placeholder="••••••••"
+              />
+            </div>
+          )}
+
+          {/* Error */}
           {error && (
             <div
               className="font-mono text-xs p-3"
@@ -102,15 +211,59 @@ export default function AuthPage() {
             </div>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !!successMsg}
             className="btn-neon w-full mt-2"
             style={{ padding: '12px', fontSize: '13px' }}
           >
-            {loading ? 'AUTHENTICATING...' : 'ACCESS GRID'}
+            {loading ? loadingLabels[mode] : submitLabels[mode]}
           </button>
         </form>
+
+        {/* Mode switcher links */}
+        <div
+          className="font-mono mt-6 flex flex-col gap-2"
+          style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
+        >
+          {mode === 'login' && (
+            <>
+              <button
+                className="btn-ghost text-left p-0"
+                style={{ fontSize: 11, letterSpacing: '0.08em' }}
+                onClick={() => switchMode('forgot')}
+              >
+                FORGOT PASSWORD?
+              </button>
+              <button
+                className="btn-ghost text-left p-0"
+                style={{ fontSize: 11, letterSpacing: '0.08em' }}
+                onClick={() => switchMode('signup')}
+              >
+                CREATE AN ACCOUNT →
+              </button>
+            </>
+          )}
+          {mode === 'signup' && (
+            <button
+              className="btn-ghost text-left p-0"
+              style={{ fontSize: 11, letterSpacing: '0.08em' }}
+              onClick={() => switchMode('login')}
+            >
+              ← ALREADY HAVE AN ACCOUNT
+            </button>
+          )}
+          {mode === 'forgot' && (
+            <button
+              className="btn-ghost text-left p-0"
+              style={{ fontSize: 11, letterSpacing: '0.08em' }}
+              onClick={() => switchMode('login')}
+            >
+              ← BACK TO SIGN IN
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
