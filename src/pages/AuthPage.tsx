@@ -125,7 +125,7 @@ export default function AuthPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'var(--bg-base)' }}
+      style={{ background: 'var(--bg-base)', overflowY: 'auto', height: '100vh', alignItems: 'flex-start', paddingTop: 'max(24px, 10vh)' }}
     >
       {/* Theme toggle */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
@@ -140,7 +140,7 @@ export default function AuthPage() {
           background: 'var(--bg-surface)',
           border: '1px solid var(--color-border-bright)',
           boxShadow: 'var(--shadow-hard)',
-          padding: '40px 32px',
+          padding: 'clamp(24px, 5vw, 40px) clamp(20px, 6vw, 32px)',
         }}
       >
         {/* Logo */}

@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 
 export default function AppShell() {
-  const { session, isLoading } = useAuth()
+  const { session, isLoading, isRecoverySession } = useAuth()
 
   if (isLoading) {
     return (
@@ -16,6 +16,10 @@ export default function AppShell() {
       </div>
     )
   }
+
+  // Password reset link was clicked — session exists but is recovery-only.
+  // Send to the reset page regardless of which URL they landed on.
+  if (isRecoverySession) return <Navigate to="/reset-password" replace />
 
   if (!session) return <Navigate to="/login" replace />
 

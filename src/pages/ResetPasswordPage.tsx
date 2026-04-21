@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { supabase } from '@/lib/supabase'
 
 export default function ResetPasswordPage() {
-  const { updatePassword } = useAuth()
+  const { updatePassword, isRecoverySession } = useAuth()
   const { toggle, theme } = useTheme()
   const navigate = useNavigate()
 
@@ -16,20 +16,19 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
-  // Supabase automatically exchanges the token in the URL hash/query params
-  // and fires onAuthStateChange with event PASSWORD_RECOVERY.
-  // We wait for that before showing the form so we know we have a valid recovery session.
+  // Supabase fires PASSWORD_RECOVERY on whichever page the reset link lands on.
+  // AppShell redirects here when it sees that event, so by the time this page
+  // mounts the event may have already fired. We catch both cases:
+  // 1. Event fires after mount (normal flow, redirect URL set correctly)
+  // 2. Event already fired before mount (AppShell redirected us here)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true)
-      }
+      if (event === 'PASSWORD_RECOVERY') setReady(true)
     })
-    // Also check if a session already exists (e.g. page refresh after recovery link clicked)
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true)
-    })
+    // If AppShell already redirected us here, isRecoverySession is true — show the form
+    if (isRecoverySession) setReady(true)
     return () => subscription.unsubscribe()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSubmit(e: FormEvent) {
@@ -62,7 +61,7 @@ export default function ResetPasswordPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'var(--bg-base)' }}
+      style={{ background: 'var(--bg-base)', overflowY: 'auto', height: '100vh', alignItems: 'flex-start', paddingTop: 'max(24px, 10vh)' }}
     >
       {/* Theme toggle */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
