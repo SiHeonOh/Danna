@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Maratype';
+  src: url('/fonts/Maratype.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Luna';
+  src: url('/fonts/Luna.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── CSS Custom Properties ─────────────────────────────────────── */
+
+:root[data-theme="dark"] {
+  --bg-base: #050505;
+  --bg-surface: #0c0c0c;
+  --bg-elevated: #141414;
+  --color-primary: #CC1200;
+  --color-secondary: #e8e8e8;
+  --color-accent: #CC1200;
+  --color-text: #c8c8c8;
+  --color-text-muted: #484848;
+  --color-border: #181818;
+  --color-border-bright: #2c2c2c;
+  --shadow-hard: 3px 3px 0px #CC1200;
+  --shadow-hard-sm: 2px 2px 0px #CC1200;
+  --shadow-hard-pink: 3px 3px 0px #e8e8e8;
+  --shadow-hard-cyan: 3px 3px 0px #CC1200;
+  --shadow-hard-dark: 3px 3px 0px #000000;
+  --block-bg-opacity: 20;
+  --scanline-color: rgba(255, 255, 255, 0.018);
+  --glow-primary: none;
+  --glow-secondary: none;
+  --glow-accent: none;
+  --input-bg: #080808;
+  --modal-overlay: rgba(0, 0, 0, 0.92);
+}
+
+/* Light mode: Marathon poster — warm parchment + tactical red + near-black ink */
+:root[data-theme="light"] {
+  --bg-base: #eeecea;
+  --bg-surface: #f8f6f0;
+  --bg-elevated: #e6e3d8;
+  --color-primary: #CC1200;
+  --color-secondary: #C85000;
+  --color-accent: #005C28;
+  --color-text: #0a0a08;
+  --color-text-muted: #484842;
+  --color-border: #242420;
+  --color-border-bright: #0a0a08;
+  --shadow-hard: 3px 3px 0px #0a0a08;
+  --shadow-hard-sm: 2px 2px 0px #0a0a08;
+  --shadow-hard-pink: 3px 3px 0px #C85000;
+  --shadow-hard-cyan: 3px 3px 0px #005C28;
+  --shadow-hard-dark: 3px 3px 0px #0a0a08;
+  --block-bg-opacity: 18;
+  --scanline-color: rgba(0, 0, 0, 0.012);
+  --glow-primary: none;
+  --glow-secondary: none;
+  --glow-accent: none;
+  --input-bg: #f0ede4;
+  --modal-overlay: rgba(238, 236, 234, 0.94);
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--color-text);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scanline texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--scanline-color) 2px,
+    var(--scanline-color) 4px
+  );
+}
+
+/* ─── Typography ─────────────────────────────────────────────────── */
+
+.font-display {
+  font-family: 'Maratype', 'Barlow Condensed', sans-serif;
+  font-weight: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: scaleX(1.2);
+  transform-origin: left center;
+  display: inline-block;
+}
+
+/* Buttons can't use scaleX — transform doesn't expand flex layout space,
+   so scaled buttons visually overflow into neighbours */
+button.font-display {
+  transform: none;
+  display: inline-block;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ─── Scrollbar Styling ──────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-bright);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ─── Glitch Animation ───────────────────────────────────────────── */
+
+@keyframes glitch-1 {
+  0%, 100% { clip-path: inset(0 0 95% 0); transform: translate(-2px, 0); }
+  20% { clip-path: inset(30% 0 50% 0); transform: translate(2px, 0); }
+  40% { clip-path: inset(60% 0 20% 0); transform: translate(-1px, 0); }
+  60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 0); }
+  80% { clip-path: inset(10% 0 75% 0); transform: translate(-2px, 0); }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { clip-path: inset(50% 0 30% 0); transform: translate(2px, 0); color: var(--color-secondary); }
+  25% { clip-path: inset(10% 0 80% 0); transform: translate(-2px, 0); color: var(--color-accent); }
+  50% { clip-path: inset(70% 0 10% 0); transform: translate(1px, 0); color: var(--color-primary); }
+  75% { clip-path: inset(40% 0 45% 0); transform: translate(-1px, 0); color: var(--color-secondary); }
+}
+
+.glitch-text {
+  position: relative;
+}
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.glitch-active::before {
+  animation: glitch-1 0.4s steps(1) forwards;
+  color: var(--color-accent);
+}
+.glitch-active::after {
+  animation: glitch-2 0.4s steps(1) forwards;
+  color: var(--color-secondary);
+}
+
+/* ─── Utility Classes ────────────────────────────────────────────── */
+
+.hard-shadow { box-shadow: var(--shadow-hard); }
+.hard-shadow-sm { box-shadow: var(--shadow-hard-sm); }
+.hard-shadow-pink { box-shadow: var(--shadow-hard-pink); }
+.hard-shadow-cyan { box-shadow: var(--shadow-hard-cyan); }
+.hard-shadow-dark { box-shadow: var(--shadow-hard-dark); }
+
+.neon-text-primary { color: var(--color-primary); text-shadow: var(--glow-primary); }
+.neon-text-secondary { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
+.neon-text-accent { color: var(--color-accent); text-shadow: var(--glow-accent); }
+
+.surface {
+  background-color: var(--bg-surface);
+  border: 2px solid var(--color-border);
+}
+
+.border-neon { border-color: var(--color-primary) !important; }
+.border-pink { border-color: var(--color-secondary) !important; }
+.border-cyan { border-color: var(--color-accent) !important; }
+
+/* ─── Calendar Block Styles ──────────────────────────────────────── */
+
+.calendar-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  transition: opacity 0.1s;
+}
+.calendar-block:active { cursor: grabbing; }
+.calendar-block.is-dragging { opacity: 0.4; }
+
+.calendar-block-task {
+  border-left-width: 4px;
+  border-left-style: dashed;
+}
+.calendar-block-event {
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+/* ─── Time Grid ──────────────────────────────────────────────────── */
+
+.time-grid {
+  position: relative;
+  height: 1440px; /* 96 × 15px */
+}
+
+.time-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 15px;
+  border-bottom: 1px solid transparent;
+}
+.time-slot:nth-child(4n) {
+  border-bottom-color: var(--color-border);
+}
+.time-slot:nth-child(4n):hover {
+  background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────── */
+
+.btn-neon {
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: 5px 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.1s, box-shadow 0.1s, color 0.1s;
+  line-height: 1.4;
+}
+.btn-neon:hover {
+  background: var(--color-primary);
+  color: var(--bg-base);
+  box-shadow: var(--shadow-hard);
+}
+.btn-neon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-pink {
+  background: transparent;
+  color: var(--color-secondary);
+  border: 2px solid var(--color-secondary);
+  padding: 5px 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.1s, box-shadow 0.1s, color 0.1s;
+  line-height: 1.4;
+}
+.btn-pink:hover {
+  background: var(--color-secondary);
+  color: var(--bg-base);
+  box-shadow: var(--shadow-hard-pink);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 2px solid var(--color-border-bright);
+  padding: 5px 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s, background 0.1s;
+  line-height: 1.4;
+}
+.btn-ghost:hover {
+  color: var(--color-text);
+  border-color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+/* ─── Inputs ─────────────────────────────────────────────────────── */
+
+input, select, textarea {
+  background: var(--input-bg);
+  color: var(--color-text);
+  border: 2px solid var(--color-border-bright);
+  padding: 7px 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.1s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: none;
+}
+
+label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ─── Checkbox ───────────────────────────────────────────────────── */
+
+.cyber-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-primary);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+.cyber-checkbox:checked {
+  background: var(--color-primary);
+}
+.cyber-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: 2px solid var(--bg-base);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+
+.hidden-mobile { display: flex; }
+.visible-mobile { display: none; }
+
+@media (max-width: 640px) {
+  .hidden-mobile { display: none !important; }
+  .visible-mobile { display: block !important; }
+  body { overflow: auto; }
+}

@@ -1,0 +1,197 @@
+import { useState, useCallback } from 'react'
+import { usePlanner } from '@/context/PlannerContext'
+import Header from '@/components/layout/Header'
+import TaskSidebar from '@/components/sidebar/TaskSidebar'
+import CalendarRoot from '@/components/calendar/CalendarRoot'
+import ItemFormModal from '@/components/forms/ItemFormModal'
+import TagManagerModal from '@/components/forms/TagManagerModal'
+import BottomSheet from '@/components/layout/BottomSheet'
+import type { ItemFormValues } from '@/types/app.types'
+
+type ViewMode = 'day' | 'week' | 'plan'
+
+export default function PlannerPage() {
+  const {
+    tags, items,
+    createTag, updateTag, deleteTag,
+    createItem, updateItem, deleteItem,
+    upsertRule, deleteRule, ruleForItem,
+  } = usePlanner()
+
+  const [viewMode, setViewMode] = useState<ViewMode>('week')
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [newEventOpen, setNewEventOpen] = useState(false)
+  const [tagManagerOpen, setTagManagerOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [editItemId, setEditItemId] = useState<string | null>(null)
+
+  // Check if mobile
+  const isMobile = window.innerWidth < 768
+
+  const editItem = editItemId ? (items.find(i => i.id === editItemId) ?? null) : null
+  const editRule = editItem ? ruleForItem(editItem.id) : null
+
+  const handleNewEvent = useCallback(() => {
+    setNewEventOpen(true)
+  }, [])
+
+  const handleCreateEvent = useCallback(async (values: ItemFormValues) => {
+    const itemData = {
+      type: values.type,
+      title: values.title,
+      description: values.description || null,
+      tag_id: values.tag_id || null,
+      date: values.date || null,
+      start_time: values.start_time || null,
+      end_time: values.end_time || null,
+      is_completed: values.is_completed,
+      priority: (values.priority as 'low' | 'medium' | 'high') || null,
+      goal_period: null as null,
+    }
+    const { data: newItem } = await createItem(itemData)
+    if (newItem && values.has_recurrence) {
+      await upsertRule(newItem.id, {
+        frequency: values.recurrence.frequency,
+        interval: values.recurrence.interval,
+        days_of_week: values.recurrence.days_of_week.length ? values.recurrence.days_of_week : null,
+        day_of_month: typeof values.recurrence.day_of_month === 'number' ? values.recurrence.day_of_month : null,
+        month_of_year: typeof values.recurrence.month_of_year === 'number' ? values.recurrence.month_of_year : null,
+        ordinal: values.recurrence.ordinal || null,
+        end_date: values.recurrence.end_date || null,
+      })
+    }
+    setNewEventOpen(false)
+  }, [createItem, upsertRule])
+
+  // Save handler for sidebar item edits (inbox tasks, goals)
+  const handleEditSave = useCallback(async (values: ItemFormValues) => {
+    if (!editItem) return
+    await updateItem(editItem.id, {
+      type: values.type,
+      title: values.title,
+      description: values.description || null,
+      tag_id: values.tag_id || null,
+      date: values.date || null,
+      start_time: values.start_time || null,
+      end_time: values.end_time || null,
+      is_completed: values.is_completed,
+      priority: (values.priority as 'low' | 'medium' | 'high') || null,
+      goal_period: editItem.goal_period, // preserve goal assignment
+    })
+    const ruleData = values.has_recurrence
+      ? {
+          frequency: values.recurrence.frequency,
+          interval: values.recurrence.interval,
+          days_of_week: values.recurrence.days_of_week.length ? values.recurrence.days_of_week : null,
+          day_of_month: typeof values.recurrence.day_of_month === 'number' ? values.recurrence.day_of_month : null,
+          month_of_year: typeof values.recurrence.month_of_year === 'number' ? values.recurrence.month_of_year : null,
+          ordinal: values.recurrence.ordinal || null,
+          end_date: values.recurrence.end_date || null,
+        }
+      : null
+    if (ruleData) {
+      await upsertRule(editItem.id, ruleData)
+    } else if (editRule) {
+      await deleteRule(editItem.id)
+    }
+    setEditItemId(null)
+  }, [editItem, editRule, updateItem, upsertRule, deleteRule])
+
+  // Delete handler for sidebar item edits
+  const handleEditDelete = useCallback(async () => {
+    if (!editItem) return
+    await deleteItem(editItem.id)
+    setEditItemId(null)
+  }, [editItem, deleteItem])
+
+  const openEdit = useCallback((id: string) => {
+    setEditItemId(id)
+  }, [])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
+      <Header
+        viewMode={isMobile ? 'day' : viewMode}
+        currentDate={currentDate}
+        onViewModeChange={setViewMode}
+        onDateChange={setCurrentDate}
+        onNewEvent={handleNewEvent}
+        onTagManager={() => setTagManagerOpen(true)}
+      />
+
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Desktop sidebar */}
+        {!isMobile && (
+          <TaskSidebar
+            onNewTask={() => setNewEventOpen(true)}
+            onEditItem={openEdit}
+          />
+        )}
+
+        {/* Calendar */}
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <CalendarRoot
+            viewMode={isMobile ? 'day' : viewMode}
+            currentDate={currentDate}
+          />
+        </div>
+      </div>
+
+      {/* Mobile sidebar as bottom sheet */}
+      {isMobile && (
+        <>
+          <button
+            className="btn-neon"
+            onClick={() => setSidebarOpen(true)}
+            style={{
+              position: 'fixed', bottom: 16, left: 16, zIndex: 100,
+              padding: '10px 16px', fontSize: 11,
+            }}
+          >
+            INBOX
+          </button>
+          <BottomSheet
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            title="INBOX"
+          >
+            <TaskSidebar
+              onNewTask={() => { setSidebarOpen(false); setNewEventOpen(true) }}
+              onEditItem={(id) => { setSidebarOpen(false); openEdit(id) }}
+            />
+          </BottomSheet>
+        </>
+      )}
+
+      {/* New event modal (from header button) */}
+      <ItemFormModal
+        isOpen={newEventOpen}
+        onClose={() => setNewEventOpen(false)}
+        onSave={handleCreateEvent}
+        tags={tags}
+        defaultType="event"
+      />
+
+      {/* Edit modal for sidebar items (inbox tasks + goals) */}
+      <ItemFormModal
+        isOpen={editItemId !== null}
+        onClose={() => setEditItemId(null)}
+        onSave={handleEditSave}
+        onDelete={handleEditDelete}
+        tags={tags}
+        editItem={editItem}
+        editRule={editRule}
+      />
+
+      {/* Tag manager */}
+      <TagManagerModal
+        isOpen={tagManagerOpen}
+        onClose={() => setTagManagerOpen(false)}
+        tags={tags}
+        onCreateTag={async (name, color) => { await createTag({ name, color, sort_order: tags.length }) }}
+        onUpdateTag={async (id, name, color) => { await updateTag(id, { name, color }) }}
+        onDeleteTag={async (id) => { await deleteTag(id) }}
+      />
+    </div>
+  )
+}
