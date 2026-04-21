@@ -60,8 +60,8 @@ export default function ResetPasswordPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: 'var(--bg-base)', overflowY: 'auto', height: '100vh', alignItems: 'flex-start', paddingTop: 'max(24px, 10vh)' }}
+      className="flex justify-center p-4"
+      style={{ background: 'var(--bg-base)', position: 'fixed', inset: 0, overflowY: 'auto', alignItems: 'flex-start', paddingTop: 'max(24px, 10vh)' }}
     >
       {/* Theme toggle */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>
