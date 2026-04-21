@@ -1,5 +1,5 @@
 import { RRule, Weekday } from 'rrule'
-import { addDays, format } from 'date-fns'
+import { parseISO, addDays, format } from 'date-fns'
 import type { RecurrenceRule, InstanceOverride, Item } from '@/types/app.types'
 import { supabase } from './supabase'
 
