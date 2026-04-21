@@ -257,21 +257,31 @@ export default function AuthPage() {
 
         {/* Mode switcher links */}
         <div
-          className="font-mono mt-6 flex flex-col gap-2"
-          style={{ fontSize: 11, color: 'var(--color-text-muted)' }}
+          className="font-mono flex flex-col"
+          style={{ marginTop: 24, borderTop: '1px solid var(--color-border-bright)', paddingTop: 16, gap: 12 }}
         >
           {mode === 'login' && (
             <>
               <button
-                className="btn-ghost text-left p-0"
-                style={{ fontSize: 11, letterSpacing: '0.08em' }}
+                className="font-mono"
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  textAlign: 'left', padding: '6px 0',
+                  fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
+                  color: 'var(--color-text)',
+                }}
                 onClick={() => switchMode('forgot')}
               >
                 FORGOT PASSWORD?
               </button>
               <button
-                className="btn-ghost text-left p-0"
-                style={{ fontSize: 11, letterSpacing: '0.08em' }}
+                className="font-mono"
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  textAlign: 'left', padding: '6px 0',
+                  fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
+                  color: 'var(--color-primary)',
+                }}
                 onClick={() => switchMode('signup')}
               >
                 CREATE AN ACCOUNT →
@@ -280,8 +290,13 @@ export default function AuthPage() {
           )}
           {mode === 'signup' && (
             <button
-              className="btn-ghost text-left p-0"
-              style={{ fontSize: 11, letterSpacing: '0.08em' }}
+              className="font-mono"
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                textAlign: 'left', padding: '6px 0',
+                fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
+                color: 'var(--color-text)',
+              }}
               onClick={() => switchMode('login')}
             >
               ← ALREADY HAVE AN ACCOUNT
@@ -289,8 +304,13 @@ export default function AuthPage() {
           )}
           {mode === 'forgot' && (
             <button
-              className="btn-ghost text-left p-0"
-              style={{ fontSize: 11, letterSpacing: '0.08em' }}
+              className="font-mono"
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                textAlign: 'left', padding: '6px 0',
+                fontSize: 13, fontWeight: 700, letterSpacing: '0.08em',
+                color: 'var(--color-text)',
+              }}
               onClick={() => switchMode('login')}
             >
               ← BACK TO SIGN IN
