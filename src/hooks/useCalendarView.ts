@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { format } from 'date-fns'
-import { expandInstances, getOverride } from '@/lib/recurrence'
+import { expandInstances, getOverride, utcDateStr } from '@/lib/recurrence'
 import type { Item, RecurrenceRule, InstanceOverride, Tag, CalendarBlock } from '@/types/app.types'
 
 interface UseCalendarViewProps {
@@ -45,7 +45,7 @@ export function useCalendarView({ items, rules, overrides, tags, from, to }: Use
         // Recurring: expand instances in range
         const dates = expandInstances(item, rule, from, to)
         for (const d of dates) {
-          const dateStr = format(d, 'yyyy-MM-dd')
+          const dateStr = utcDateStr(d)
           const override = getOverride(item.id, dateStr, overrides)
           if (override?.is_skipped) continue
 
@@ -111,7 +111,7 @@ export function useAllDayItems(
       } else {
         const dates = expandInstances(item, rule, from, to)
         for (const d of dates) {
-          const dateStr = format(d, 'yyyy-MM-dd')
+          const dateStr = utcDateStr(d)
           const override = getOverride(item.id, dateStr, overrides)
           if (override?.is_skipped) continue
           blocks.push({

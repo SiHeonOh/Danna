@@ -1,7 +1,28 @@
 import { RRule, Weekday } from 'rrule'
-import { parseISO, addDays, format } from 'date-fns'
+import { addDays, format } from 'date-fns'
 import type { RecurrenceRule, InstanceOverride, Item } from '@/types/app.types'
 import { supabase } from './supabase'
+
+/**
+ * Parse a yyyy-MM-dd string as UTC midnight.
+ * rrule works entirely in UTC, so all Date values passed to it must be UTC
+ * midnight to avoid day-shift bugs in UTC+ timezones.
+ */
+export function utcMidnight(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d))
+}
+
+/**
+ * Format a UTC Date back to yyyy-MM-dd using UTC components.
+ * date-fns format() uses local time, which would shift the date again.
+ */
+export function utcDateStr(d: Date): string {
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 const WEEKDAY_MAP: Record<string, Weekday> = {
   MO: RRule.MO,
@@ -17,7 +38,7 @@ export function buildRRule(rule: RecurrenceRule, dtstart: Date): RRule {
   const options: Partial<ConstructorParameters<typeof RRule>[0]> = {
     dtstart,
     interval: rule.interval,
-    until: rule.end_date ? parseISO(rule.end_date) : undefined,
+    until: rule.end_date ? utcMidnight(rule.end_date) : undefined,
   }
 
   switch (rule.frequency) {
@@ -62,9 +83,15 @@ export function expandInstances(
   to: Date,
 ): Date[] {
   if (!item.date) return []
-  const dtstart = parseISO(item.date)
+  // dtstart must be UTC midnight — rrule operates in UTC, so any local-time
+  // offset in dtstart causes occurrences to land on the wrong calendar day.
+  const dtstart = utcMidnight(item.date)
   const rrule = buildRRule(rule, dtstart)
-  return rrule.between(from, to, true)
+  // Range bounds also need to be UTC midnight/end-of-day so rrule's UTC
+  // comparisons align with the local calendar dates we're querying.
+  const fromUTC = new Date(Date.UTC(from.getFullYear(), from.getMonth(), from.getDate()))
+  const toUTC = new Date(Date.UTC(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59))
+  return rrule.between(fromUTC, toUTC, true)
 }
 
 export function isSkipped(
