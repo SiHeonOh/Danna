@@ -1,19 +1,34 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { readCache, writeCache } from '@/lib/offlineCache'
 import type { InstanceOverride } from '@/types/app.types'
 
 export function useInstanceOverrides() {
-  const [overrides, setOverrides] = useState<InstanceOverride[]>([])
+  const cached = readCache<InstanceOverride>('overrides')
+  const [overrides, setOverrides] = useState<InstanceOverride[]>(cached)
+  const hasFetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (hasFetchedRef.current) {
+      writeCache('overrides', overrides)
+    }
+  }, [overrides])
 
   useEffect(() => {
     supabase
       .from('instance_overrides')
       .select('*')
-      .then(({ data }) => { if (data) setOverrides(data as InstanceOverride[]) })
+      .then(({ data }) => {
+        if (data) {
+          hasFetchedRef.current = true
+          setOverrides(data as InstanceOverride[])
+        }
+      })
 
     const channel = supabase
       .channel('overrides-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'instance_overrides' }, (payload) => {
+        hasFetchedRef.current = true
         if (payload.eventType === 'INSERT') {
           setOverrides((prev) => [...prev, payload.new as InstanceOverride])
         } else if (payload.eventType === 'UPDATE') {

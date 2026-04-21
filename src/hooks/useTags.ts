@@ -1,25 +1,38 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { readCache, writeCache } from '@/lib/offlineCache'
 import type { Tag } from '@/types/app.types'
 
 export function useTags() {
-  const [tags, setTags] = useState<Tag[]>([])
-  const [loading, setLoading] = useState(true)
+  const cached = readCache<Tag>('tags')
+  const [tags, setTags] = useState<Tag[]>(cached)
+  const [loading, setLoading] = useState(cached.length === 0)
+  const hasFetchedRef = useRef(false)
 
   useEffect(() => {
-    setLoading(true)
+    if (hasFetchedRef.current) {
+      writeCache('tags', tags)
+    }
+  }, [tags])
+
+  useEffect(() => {
+    setLoading(cached.length === 0)
     supabase
       .from('tags')
       .select('*')
       .order('sort_order')
       .then(({ data }) => {
-        if (data) setTags(data as Tag[])
+        if (data) {
+          hasFetchedRef.current = true
+          setTags(data as Tag[])
+        }
         setLoading(false)
       })
 
     const channel = supabase
       .channel('tags-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, (payload) => {
+        hasFetchedRef.current = true
         if (payload.eventType === 'INSERT') {
           setTags((prev) => [...prev, payload.new as Tag].sort((a, b) => a.sort_order - b.sort_order))
         } else if (payload.eventType === 'UPDATE') {
@@ -33,6 +46,7 @@ export function useTags() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const createTag = useCallback(async (data: Omit<Tag, 'id' | 'user_id' | 'created_at'>) => {

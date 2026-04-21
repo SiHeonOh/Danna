@@ -1,19 +1,34 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { readCache, writeCache } from '@/lib/offlineCache'
 import type { RecurrenceRule } from '@/types/app.types'
 
 export function useRecurrenceRules() {
-  const [rules, setRules] = useState<RecurrenceRule[]>([])
+  const cached = readCache<RecurrenceRule>('rules')
+  const [rules, setRules] = useState<RecurrenceRule[]>(cached)
+  const hasFetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (hasFetchedRef.current) {
+      writeCache('rules', rules)
+    }
+  }, [rules])
 
   useEffect(() => {
     supabase
       .from('recurrence_rules')
       .select('*')
-      .then(({ data }) => { if (data) setRules(data as RecurrenceRule[]) })
+      .then(({ data }) => {
+        if (data) {
+          hasFetchedRef.current = true
+          setRules(data as RecurrenceRule[])
+        }
+      })
 
     const channel = supabase
       .channel('rules-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'recurrence_rules' }, (payload) => {
+        hasFetchedRef.current = true
         if (payload.eventType === 'INSERT') {
           setRules((prev) => [...prev, payload.new as RecurrenceRule])
         } else if (payload.eventType === 'UPDATE') {

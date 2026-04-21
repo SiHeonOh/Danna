@@ -1,25 +1,40 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { readCache, writeCache } from '@/lib/offlineCache'
 import type { Item } from '@/types/app.types'
 
 export function useItems() {
-  const [items, setItems] = useState<Item[]>([])
-  const [loading, setLoading] = useState(true)
+  const cached = readCache<Item>('items')
+  const [items, setItems] = useState<Item[]>(cached)
+  const [loading, setLoading] = useState(cached.length === 0)
+  // Only write to cache once we have confirmed fresh data from Supabase,
+  // so an offline boot never overwrites a valid cache with an empty array.
+  const hasFetchedRef = useRef(false)
 
   useEffect(() => {
-    setLoading(true)
+    if (hasFetchedRef.current) {
+      writeCache('items', items)
+    }
+  }, [items])
+
+  useEffect(() => {
+    setLoading(cached.length === 0)
     supabase
       .from('items')
       .select('*')
       .order('created_at')
       .then(({ data }) => {
-        if (data) setItems(data as Item[])
+        if (data) {
+          hasFetchedRef.current = true
+          setItems(data as Item[])
+        }
         setLoading(false)
       })
 
     const channel = supabase
       .channel('items-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, (payload) => {
+        hasFetchedRef.current = true
         if (payload.eventType === 'INSERT') {
           setItems((prev) => [...prev, payload.new as Item])
         } else if (payload.eventType === 'UPDATE') {
@@ -33,6 +48,7 @@ export function useItems() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const createItem = useCallback(async (data: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {

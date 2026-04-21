@@ -8,6 +8,7 @@ import ItemFormModal from '@/components/forms/ItemFormModal'
 import TagManagerModal from '@/components/forms/TagManagerModal'
 import BottomSheet from '@/components/layout/BottomSheet'
 import ViewFAB from '@/components/layout/ViewFAB'
+import { useIsOnline } from '@/hooks/useIsOnline'
 import type { ItemFormValues } from '@/types/app.types'
 
 type ViewMode = 'day' | 'week' | 'plan' | 'month'
@@ -30,6 +31,7 @@ export default function PlannerPage() {
   const [mobilePlanOpen, setMobilePlanOpen] = useState(false)
 
   const isMobile = useIsMobile()
+  const isOnline = useIsOnline()
 
   const editItem = editItemId ? (items.find(i => i.id === editItemId) ?? null) : null
   const editRule = editItem ? ruleForItem(editItem.id) : null
@@ -121,6 +123,25 @@ export default function PlannerPage() {
         onNewEvent={handleNewEvent}
         onTagManager={() => setTagManagerOpen(true)}
       />
+
+      {/* Offline banner */}
+      {!isOnline && (
+        <div
+          className="font-mono"
+          style={{
+            background: '#FF4500',
+            color: '#ffffff',
+            textAlign: 'center',
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            padding: '5px 0',
+            flexShrink: 0,
+          }}
+        >
+          ⚠ OFFLINE — SHOWING LAST SAVED DATA
+        </div>
+      )}
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Desktop sidebar */}
