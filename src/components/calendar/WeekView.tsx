@@ -125,17 +125,16 @@ export default function WeekView({
           }}
         >
           <span
-            className="font-display"
+            className="font-mono"
             style={{
-              fontSize: 9,
+              fontSize: 8,
               color: 'var(--color-text-muted)',
-              letterSpacing: '0.1em',
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              transform: 'rotate(180deg)',
+              letterSpacing: '0.06em',
+              textAlign: 'center',
+              lineHeight: 1.3,
             }}
           >
-            ALL-DAY
+            ALL{'\n'}DAY
           </span>
         </div>
         {days.map((d) => (
