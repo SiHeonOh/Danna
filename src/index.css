@@ -327,7 +327,7 @@ input, select, textarea {
   border: 2px solid var(--color-border-bright);
   padding: 7px 10px;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
   font-weight: 500;
   outline: none;
   width: 100%;
