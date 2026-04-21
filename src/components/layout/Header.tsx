@@ -1,9 +1,9 @@
-import { addDays, subDays, addWeeks, subWeeks, format } from 'date-fns'
+import { addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, format } from 'date-fns'
 import GlitchText from '@/components/ui/GlitchText'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useAuth } from '@/context/AuthContext'
 
-type ViewMode = 'day' | 'week' | 'plan'
+type ViewMode = 'day' | 'week' | 'plan' | 'month'
 
 interface HeaderProps {
   viewMode: ViewMode
@@ -20,10 +20,14 @@ export default function Header({
   const { signOut } = useAuth()
 
   function goBack() {
-    onDateChange(viewMode === 'week' ? subWeeks(currentDate, 1) : subDays(currentDate, 1))
+    if (viewMode === 'week') onDateChange(subWeeks(currentDate, 1))
+    else if (viewMode === 'month') onDateChange(subMonths(currentDate, 1))
+    else onDateChange(subDays(currentDate, 1))
   }
   function goForward() {
-    onDateChange(viewMode === 'week' ? addWeeks(currentDate, 1) : addDays(currentDate, 1))
+    if (viewMode === 'week') onDateChange(addWeeks(currentDate, 1))
+    else if (viewMode === 'month') onDateChange(addMonths(currentDate, 1))
+    else onDateChange(addDays(currentDate, 1))
   }
   function goToday() {
     onDateChange(new Date())
@@ -31,7 +35,9 @@ export default function Header({
 
   const dateLabel = viewMode === 'week'
     ? `${format(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay() + 1), 'MMM d')} — ${format(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay() + 7), 'MMM d, yyyy')}`.toUpperCase()
-    : format(currentDate, 'MMM d, yyyy').toUpperCase()
+    : viewMode === 'month'
+      ? format(currentDate, 'MMMM yyyy').toUpperCase()
+      : format(currentDate, 'MMM d, yyyy').toUpperCase()
 
   return (
     <div
@@ -108,9 +114,10 @@ export default function Header({
       {/* View toggle */}
       <div style={{ display: 'flex' }}>
         {([
-          { id: 'plan', label: 'PLAN' },
-          { id: 'day',  label: 'DAY'  },
-          { id: 'week', label: 'WEEK' },
+          { id: 'plan',  label: 'PLAN'  },
+          { id: 'day',   label: 'DAY'   },
+          { id: 'week',  label: 'WEEK'  },
+          { id: 'month', label: 'MONTH' },
         ] as const).map(({ id, label }, idx) => (
           <button
             key={id}

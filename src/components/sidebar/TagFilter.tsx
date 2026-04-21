@@ -14,9 +14,9 @@ export default function TagFilter({ tags, activeFilter, onFilterChange }: TagFil
         className="font-mono"
         style={{
           padding: '2px 8px', fontSize: 10,
-          background: activeFilter === null ? 'var(--color-border-bright)' : 'transparent',
-          border: `1px solid ${activeFilter === null ? 'var(--color-text)' : 'var(--color-border-bright)'}`,
-          color: activeFilter === null ? 'var(--color-text)' : 'var(--color-text-muted)',
+          background: activeFilter === null ? 'var(--color-primary)' : 'transparent',
+          border: `1px solid ${activeFilter === null ? 'var(--color-primary)' : 'var(--color-border-bright)'}`,
+          color: activeFilter === null ? '#ffffff' : 'var(--color-text-muted)',
           cursor: 'pointer',
         }}
       >

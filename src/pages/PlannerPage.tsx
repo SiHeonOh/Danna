@@ -8,7 +8,7 @@ import TagManagerModal from '@/components/forms/TagManagerModal'
 import BottomSheet from '@/components/layout/BottomSheet'
 import type { ItemFormValues } from '@/types/app.types'
 
-type ViewMode = 'day' | 'week' | 'plan'
+type ViewMode = 'day' | 'week' | 'plan' | 'month'
 
 export default function PlannerPage() {
   const {
@@ -21,6 +21,7 @@ export default function PlannerPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [newEventOpen, setNewEventOpen] = useState(false)
+  const [newTaskOpen, setNewTaskOpen] = useState(false)
   const [tagManagerOpen, setTagManagerOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editItemId, setEditItemId] = useState<string | null>(null)
@@ -123,7 +124,7 @@ export default function PlannerPage() {
         {/* Desktop sidebar */}
         {!isMobile && (
           <TaskSidebar
-            onNewTask={() => setNewEventOpen(true)}
+            onNewTask={() => setNewTaskOpen(true)}
             onEditItem={openEdit}
           />
         )}
@@ -133,6 +134,7 @@ export default function PlannerPage() {
           <CalendarRoot
             viewMode={isMobile ? 'day' : viewMode}
             currentDate={currentDate}
+            onNavigate={(date, mode) => { setCurrentDate(date); setViewMode(mode) }}
           />
         </div>
       </div>
@@ -156,7 +158,7 @@ export default function PlannerPage() {
             title="INBOX"
           >
             <TaskSidebar
-              onNewTask={() => { setSidebarOpen(false); setNewEventOpen(true) }}
+              onNewTask={() => { setSidebarOpen(false); setNewTaskOpen(true) }}
               onEditItem={(id) => { setSidebarOpen(false); openEdit(id) }}
             />
           </BottomSheet>
@@ -170,6 +172,15 @@ export default function PlannerPage() {
         onSave={handleCreateEvent}
         tags={tags}
         defaultType="event"
+      />
+
+      {/* New task modal (from sidebar inbox + task button) */}
+      <ItemFormModal
+        isOpen={newTaskOpen}
+        onClose={() => setNewTaskOpen(false)}
+        onSave={async (values) => { await handleCreateEvent(values); setNewTaskOpen(false) }}
+        tags={tags}
+        defaultType="task"
       />
 
       {/* Edit modal for sidebar items (inbox tasks + goals) */}

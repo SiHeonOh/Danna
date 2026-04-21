@@ -1,5 +1,5 @@
 import { format, isToday, startOfDay, endOfDay } from 'date-fns'
-import { useDraggable } from '@dnd-kit/core'
+import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { formatDisplayTime, timeStringToMinutes } from '@/lib/dateUtils'
 import { usePlanner } from '@/context/PlannerContext'
 import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
@@ -28,6 +28,46 @@ function priorityDot(priority: Item['priority']) {
       background: colors[priority] ?? '#555', borderRadius: '50%',
       flexShrink: 0, marginTop: 5,
     }} />
+  )
+}
+
+function TodoDropZone({ dateStr, children }: { dateStr: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'todo-drop',
+    data: { type: 'todo', date: dateStr },
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        minHeight: 32,
+        transition: 'background 0.1s',
+        background: isOver ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)' : 'transparent',
+        outline: isOver ? '1px dashed var(--color-primary)' : 'none',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function InboxDropZone({ children }: { children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'inbox-drop',
+    data: { type: 'inbox' },
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        minHeight: 32,
+        transition: 'background 0.1s',
+        background: isOver ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)' : 'transparent',
+        outline: isOver ? '1px dashed var(--color-primary)' : 'none',
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -120,10 +160,15 @@ export default function PlanView({
     .filter((b) => b.date === dateStr)
     .sort((a, b) => timeStringToMinutes(a.start_time) - timeStringToMinutes(b.start_time))
 
-  const unscheduledTasks = items.filter((item) => {
-    if (item.type !== 'task') return false
-    return !item.date || (item.date === dateStr && !item.start_time)
-  })
+  // Tasks assigned to this day but with no time — the "To Do" list
+  const todoTasks = items.filter((item) =>
+    item.type === 'task' && item.date === dateStr && !item.start_time
+  )
+
+  // Truly unscheduled tasks — no date, no goal_period
+  const inboxTasks = items.filter((item) =>
+    item.type === 'task' && !item.date && !item.goal_period
+  )
 
   const allDayForDay = allDayBlocks.filter((b) => b.date === dateStr)
 
@@ -319,32 +364,33 @@ export default function PlanView({
             )}
           </>
 
-          {/* INBOX section */}
+          {/* TO DO section — tasks assigned to this day, no time yet */}
           <>
-            {/* Stencil header with + TASK button integrated on right */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)', borderTop: '2px solid var(--color-border)', marginTop: 4 }}>
               <div style={{ width: 3, height: 13, background: 'var(--color-primary)', flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>INBOX</span>
+              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>TO DO</span>
               <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
               <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginRight: 6 }}>
-                {unscheduledTasks.filter((t) => !t.is_completed).length}
+                {todoTasks.filter((t) => !t.is_completed).length}
               </span>
               <button
                 className="btn-neon"
                 style={{ padding: '2px 8px', fontSize: 9, flexShrink: 0 }}
-                onClick={onNewTask}
+                onClick={() => onSlotClick(dateStr, '')}
               >
                 + TASK
               </button>
             </div>
 
+            <TodoDropZone dateStr={dateStr}>
             <div style={{ padding: '6px 10px 8px' }}>
-              {unscheduledTasks.filter((t) => !t.is_completed).length === 0 && (
+              {todoTasks.filter((t) => !t.is_completed).length === 0 && (
                 <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '6px 4px', padding: 0 }}>
-                  No unscheduled tasks.
+                  No tasks for this day.
+                  <br />Drag onto the timeline to schedule.
                 </p>
               )}
-              {unscheduledTasks.filter((t) => !t.is_completed).map((item) => {
+              {todoTasks.filter((t) => !t.is_completed).map((item) => {
                 const tag = tagById(item.tag_id)
                 return (
                   <DraggableInboxTask
@@ -357,27 +403,17 @@ export default function PlanView({
                 )
               })}
 
-              {unscheduledTasks.filter((t) => t.is_completed).length > 0 && (
+              {todoTasks.filter((t) => t.is_completed).length > 0 && (
                 <div style={{ marginTop: 8, opacity: 0.5 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <div style={{ width: 2, height: 11, background: 'var(--color-border-bright)', flexShrink: 0 }} />
                     <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>COMPLETED</span>
                   </div>
-                  {unscheduledTasks.filter((t) => t.is_completed).map((item) => {
+                  {todoTasks.filter((t) => t.is_completed).map((item) => {
                     const tag = tagById(item.tag_id)
                     const tagColor = tag?.color ?? '#555555'
                     return (
-                      <div
-                        key={item.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '4px 8px',
-                          marginBottom: 2,
-                          borderLeft: `2px dashed ${tagColor}`,
-                        }}
-                      >
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', marginBottom: 2, borderLeft: `2px dashed ${tagColor}` }}>
                         <input
                           type="checkbox"
                           className="cyber-checkbox"
@@ -386,14 +422,7 @@ export default function PlanView({
                           onPointerDown={(e) => e.stopPropagation()}
                           style={{ borderColor: tagColor, flexShrink: 0 }}
                         />
-                        <div className="font-display" style={{
-                          fontSize: 11,
-                          color: 'var(--color-text-muted)',
-                          textDecoration: 'line-through',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}>
+                        <div className="font-display" style={{ fontSize: 11, color: 'var(--color-text-muted)', textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {item.title}
                         </div>
                       </div>
@@ -402,6 +431,76 @@ export default function PlanView({
                 </div>
               )}
             </div>
+            </TodoDropZone>
+          </>
+
+          {/* INBOX section — truly unscheduled tasks (no date) */}
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)', borderTop: '2px solid var(--color-border)', marginTop: 4 }}>
+              <div style={{ width: 3, height: 13, background: 'var(--color-primary)', flexShrink: 0 }} />
+              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>INBOX</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
+              <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginRight: 6 }}>
+                {inboxTasks.filter((t) => !t.is_completed).length}
+              </span>
+              <button
+                className="btn-neon"
+                style={{ padding: '2px 8px', fontSize: 9, flexShrink: 0 }}
+                onClick={onNewTask}
+              >
+                + TASK
+              </button>
+            </div>
+
+            <InboxDropZone>
+            <div style={{ padding: '6px 10px 8px' }}>
+              {inboxTasks.filter((t) => !t.is_completed).length === 0 && (
+                <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '6px 4px', padding: 0 }}>
+                  No unscheduled tasks.
+                </p>
+              )}
+              {inboxTasks.filter((t) => !t.is_completed).map((item) => {
+                const tag = tagById(item.tag_id)
+                return (
+                  <DraggableInboxTask
+                    key={item.id}
+                    item={item}
+                    tag={tag ?? null}
+                    onToggleComplete={() => toggleComplete(item.id, item.is_completed)}
+                    onDoubleClick={() => onEditItem(item.id)}
+                  />
+                )
+              })}
+
+              {inboxTasks.filter((t) => t.is_completed).length > 0 && (
+                <div style={{ marginTop: 8, opacity: 0.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <div style={{ width: 2, height: 11, background: 'var(--color-border-bright)', flexShrink: 0 }} />
+                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>COMPLETED</span>
+                  </div>
+                  {inboxTasks.filter((t) => t.is_completed).map((item) => {
+                    const tag = tagById(item.tag_id)
+                    const tagColor = tag?.color ?? '#555555'
+                    return (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', marginBottom: 2, borderLeft: `2px dashed ${tagColor}` }}>
+                        <input
+                          type="checkbox"
+                          className="cyber-checkbox"
+                          checked={true}
+                          onChange={() => toggleComplete(item.id, item.is_completed)}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          style={{ borderColor: tagColor, flexShrink: 0 }}
+                        />
+                        <div className="font-display" style={{ fontSize: 11, color: 'var(--color-text-muted)', textDecoration: 'line-through', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.title}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            </InboxDropZone>
           </>
         </div>
       </div>

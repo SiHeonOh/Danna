@@ -4,7 +4,7 @@ import {
   useSensor, useSensors, type DragEndEvent, type DragStartEvent, type DragMoveEvent,
 } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { startOfWeek, endOfWeek, startOfDay, endOfDay, subDays, parseISO, format } from 'date-fns'
+import { startOfWeek, endOfWeek, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, parseISO, format } from 'date-fns'
 import { usePlanner } from '@/context/PlannerContext'
 import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
 import { useDragState } from '@/hooks/useDragState'
@@ -16,18 +16,20 @@ import {
 import DayView from './DayView'
 import WeekView from './WeekView'
 import PlanView from './PlanView'
+import MonthView from './MonthView'
 import type { CalendarBlock, ItemFormValues, EditScope } from '@/types/app.types'
 import ItemFormModal from '@/components/forms/ItemFormModal'
 import EditScopeDialog from '@/components/forms/EditScopeDialog'
 
-type ViewMode = 'day' | 'week' | 'plan'
+type ViewMode = 'day' | 'week' | 'plan' | 'month'
 
 interface CalendarRootProps {
   viewMode: ViewMode
   currentDate: Date
+  onNavigate?: (date: Date, viewMode: ViewMode) => void
 }
 
-export default function CalendarRoot({ viewMode, currentDate }: CalendarRootProps) {
+export default function CalendarRoot({ viewMode, currentDate, onNavigate }: CalendarRootProps) {
   const {
     items, tags, rules, overrides,
     createItem, updateItem, deleteItem,
@@ -49,8 +51,14 @@ export default function CalendarRoot({ viewMode, currentDate }: CalendarRootProp
 
   // Date range for the view
   const { from, to } = useMemo(() => {
-    if (viewMode === 'day') {
+    if (viewMode === 'day' || viewMode === 'plan') {
       return { from: startOfDay(currentDate), to: endOfDay(currentDate) }
+    }
+    if (viewMode === 'month') {
+      return {
+        from: startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }),
+        to: endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 }),
+      }
     }
     return {
       from: startOfWeek(currentDate, { weekStartsOn: 1 }),
@@ -113,10 +121,27 @@ export default function CalendarRoot({ viewMode, currentDate }: CalendarRootProp
     }
 
     if (!over) return
-    const overData = over.data.current as { type: string; date: string; time: string } | undefined
-    if (!overData || overData.type !== 'slot') return
+    const overData = over.data.current as { type: string; date: string; time?: string } | undefined
+    if (!overData) return
 
-    const { date: newDate, time: newTime } = overData
+    // Drop onto TO DO zone — clear times, keep date
+    if (overData.type === 'todo') {
+      const block = blocks.find((b) => b.key === activeId)
+      if (!block || block.is_recurring) return
+      await updateItem(block.item.id, { start_time: null, end_time: null })
+      return
+    }
+
+    // Drop onto INBOX zone — clear date and times entirely
+    if (overData.type === 'inbox') {
+      const block = blocks.find((b) => b.key === activeId)
+      if (!block || block.is_recurring) return
+      await updateItem(block.item.id, { date: null, start_time: null, end_time: null })
+      return
+    }
+
+    if (overData.type !== 'slot') return
+    const { date: newDate, time: newTime } = overData as { type: string; date: string; time: string }
 
     if (activeId.startsWith('unscheduled::')) {
       const itemId = activeId.replace('unscheduled::', '')
@@ -330,6 +355,12 @@ export default function CalendarRoot({ viewMode, currentDate }: CalendarRootProp
               onCompleteInstance={handleCompleteInstance}
               onAllDayClick={handleBlockDoubleClick}
               onAllDayAdd={handleAllDayAdd}
+            />
+          ) : viewMode === 'month' ? (
+            <MonthView
+              date={currentDate}
+              onDayClick={(d) => onNavigate?.(d, 'plan')}
+              onBlockDoubleClick={handleBlockDoubleClick}
             />
           ) : (
             <WeekView
