@@ -26,7 +26,8 @@ export default function BottomSheet({ isOpen, onClose, children, title }: Bottom
           background: 'var(--bg-surface)',
           borderTop: '2px solid var(--color-primary)',
           boxShadow: '0 -4px 0 var(--color-primary)',
-          maxHeight: '70vh',
+          height: '55vh',
+          maxHeight: '80vh',
           display: 'flex',
           flexDirection: 'column',
         }}

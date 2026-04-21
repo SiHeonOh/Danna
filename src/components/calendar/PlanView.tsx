@@ -6,6 +6,7 @@ import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
 import type { CalendarBlock, Item, Tag } from '@/types/app.types'
 import TimeGrid from './TimeGrid'
 import AllDaySection from './AllDaySection'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface PlanViewProps {
   date: Date
@@ -103,6 +104,7 @@ function DraggableInboxTask({
         background: `${tagColor}14`,
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
+        touchAction: 'none',
         opacity: isDragging ? 0.4 : 1,
       }}
       onDoubleClick={onDoubleClick}
@@ -183,23 +185,27 @@ export default function PlanView({
   const today = isToday(date)
   const remainingCount = scheduledBlocks.filter((b) => !b.is_completed).length
   const doneCount = scheduledBlocks.filter((b) => b.is_completed).length
+  const isMobile = useIsMobile()
 
   return (
-    <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flex: 1, overflow: 'hidden', height: '100%' }}>
 
-      {/* ── Left: Task list panel ── */}
+      {/* ── Task list panel (left on desktop, top on mobile) ── */}
       <div style={{
-        width: 300,
+        width: isMobile ? '100%' : 300,
+        height: isMobile ? '42vh' : undefined,
+        maxHeight: isMobile ? '42vh' : undefined,
         flexShrink: 0,
-        borderRight: '2px solid var(--color-border)',
+        borderRight: isMobile ? 'none' : '2px solid var(--color-border)',
+        borderBottom: isMobile ? '2px solid var(--color-border)' : 'none',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         background: 'var(--bg-surface)',
       }}>
 
-        {/* Panel header */}
-        <div style={{
+        {/* Panel header — hidden on mobile (date already visible in day view behind overlay) */}
+        {!isMobile && <div style={{
           display: 'flex',
           alignItems: 'stretch',
           borderBottom: '2px solid var(--color-border)',
@@ -236,7 +242,7 @@ export default function PlanView({
               <span>{doneCount} DONE</span>
             </div>
           </div>
-        </div>
+        </div>}
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
 
@@ -314,7 +320,8 @@ export default function PlanView({
                         cursor: 'pointer',
                         opacity: done ? 0.6 : 1,
                       }}
-                      onDoubleClick={() => onBlockDoubleClick(block)}
+                      onDoubleClick={!isMobile ? () => onBlockDoubleClick(block) : undefined}
+                      onClick={isMobile ? () => onBlockDoubleClick(block) : undefined}
                     >
                       {block.item.type === 'task' && (
                         <input

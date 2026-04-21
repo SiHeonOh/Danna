@@ -3,6 +3,7 @@ import { usePlanner } from '@/context/PlannerContext'
 import { UnscheduledTask } from './UnscheduledTask'
 import TagFilter from './TagFilter'
 import type { GoalPeriod, Item } from '@/types/app.types'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type Tab = 'inbox' | 'weekly' | 'monthly'
 
@@ -253,6 +254,7 @@ function GoalTab({
 export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps) {
   const { items, tags, toggleComplete, tagById, activeTagFilter, setActiveTagFilter } = usePlanner()
   const [activeTab, setActiveTab] = useState<Tab>('inbox')
+  const isMobile = useIsMobile()
 
   const unscheduled = items.filter((item) => {
     if (item.type !== 'task') return false
@@ -273,9 +275,9 @@ export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps)
 
   return (
     <div style={{
-      width: 240,
-      flexShrink: 0,
-      borderRight: '2px solid var(--color-border)',
+      width: isMobile ? '100%' : 240,
+      flexShrink: isMobile ? undefined : 0,
+      borderRight: isMobile ? 'none' : '2px solid var(--color-border)',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg-surface)',

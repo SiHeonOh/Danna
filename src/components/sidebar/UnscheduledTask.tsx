@@ -32,6 +32,7 @@ export function UnscheduledTask({ item, tag, onToggleComplete, onDoubleClick }: 
         opacity: isDragging ? 0.4 : 1,
         cursor: 'grab',
         userSelect: 'none',
+        touchAction: 'none',
         marginBottom: 4,
       }}
     >

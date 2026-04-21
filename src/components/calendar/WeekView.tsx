@@ -5,6 +5,8 @@ import TimeSlot from './TimeSlot'
 import CalendarBlock from './CalendarBlock'
 import CurrentTimeLine from './CurrentTimeLine'
 import AllDaySection from './AllDaySection'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import type { ReactNode } from 'react'
 
 interface WeekViewProps {
   date: Date
@@ -16,6 +18,7 @@ interface WeekViewProps {
   onCompleteInstance: (block: CalendarBlockType) => void
   onAllDayClick: (block: CalendarBlockType) => void
   onAllDayAdd: (date: string) => void
+  planContent?: ReactNode
 }
 
 const HOUR_LABELS = Array.from({ length: 24 }, (_, i) =>
@@ -32,18 +35,25 @@ export default function WeekView({
   onCompleteInstance,
   onAllDayClick,
   onAllDayAdd,
+  planContent,
 }: WeekViewProps) {
   const days = weekDays(date)
+  const isMobile = useIsMobile()
+  const labelCol = isMobile ? 28 : 56
+
+  // On mobile each day column is at least 44px wide — allow horizontal scroll if needed
+  const minWeekWidth = isMobile ? labelCol + 7 * 44 : 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', overflowX: isMobile ? 'auto' : 'hidden' }}>
       {/* Day headers */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '56px repeat(7, 1fr)',
+          gridTemplateColumns: `${labelCol}px repeat(7, 1fr)`,
           borderBottom: '2px solid var(--color-border)',
           flexShrink: 0,
+          minWidth: minWeekWidth || undefined,
         }}
       >
         <div style={{ borderRight: '2px solid var(--color-border)' }} />
@@ -53,8 +63,8 @@ export default function WeekView({
             <div
               key={d.toISOString()}
               style={{
-                height: 64,
-                padding: '8px 4px 0',
+                height: isMobile ? 44 : 64,
+                padding: isMobile ? '4px 2px 0' : '8px 4px 0',
                 borderRight: '2px solid var(--color-border)',
                 textAlign: 'center',
                 position: 'relative',
@@ -64,30 +74,32 @@ export default function WeekView({
                 justifyContent: 'center',
               }}
             >
-              <span
-                className="font-display"
-                style={{
-                  fontSize: 13,
-                  color: today ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                  letterSpacing: '0.1em',
-                  lineHeight: 1,
-                }}
-              >
-                {format(d, 'EEE').toUpperCase()}
-              </span>
+              {!isMobile && (
+                <span
+                  className="font-display"
+                  style={{
+                    fontSize: 13,
+                    color: today ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    letterSpacing: '0.1em',
+                    lineHeight: 1,
+                  }}
+                >
+                  {format(d, 'EEE').toUpperCase()}
+                </span>
+              )}
               <span
                 className="font-mono"
                 style={{
                   display: 'block',
-                  fontSize: 22,
+                  fontSize: isMobile ? 13 : 22,
                   fontWeight: 700,
                   color: today ? 'var(--color-primary)' : 'var(--color-text)',
                   textShadow: today ? 'var(--glow-primary)' : 'none',
                   lineHeight: 1.1,
-                  marginTop: 2,
+                  marginTop: isMobile ? 0 : 2,
                 }}
               >
-                {format(d, 'd')}
+                {format(d, isMobile ? 'EEE d' : 'd')}
               </span>
               {today && (
                 <div
@@ -111,9 +123,10 @@ export default function WeekView({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '56px repeat(7, 1fr)',
+          gridTemplateColumns: `${labelCol}px repeat(7, 1fr)`,
           borderBottom: '2px solid var(--color-border)',
           flexShrink: 0,
+          minWidth: minWeekWidth || undefined,
         }}
       >
         <div
@@ -149,14 +162,15 @@ export default function WeekView({
         ))}
       </div>
 
-      {/* Scrollable grid */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      {/* Scrollable grid — replaced by plan panel when open on mobile */}
+      {planContent ?? <div style={{ flex: 1, overflowY: 'auto', minWidth: minWeekWidth || undefined }}>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '56px repeat(7, 1fr)',
+            gridTemplateColumns: `${labelCol}px repeat(7, 1fr)`,
             height: 1440,
             position: 'relative',
+            minWidth: minWeekWidth || undefined,
           }}
         >
           {/* Hour labels */}
@@ -168,8 +182,8 @@ export default function WeekView({
                 style={{
                   position: 'absolute',
                   top: i * 60 * (SLOT_HEIGHT_PX / 15) - 6,
-                  right: 8,
-                  fontSize: 10,
+                  right: isMobile ? 3 : 8,
+                  fontSize: isMobile ? 8 : 10,
                   fontWeight: 700,
                   color: 'var(--color-text-muted)',
                   lineHeight: 1,
@@ -210,7 +224,7 @@ export default function WeekView({
             )
           })}
         </div>
-      </div>
+      </div>}
     </div>
   )
 }

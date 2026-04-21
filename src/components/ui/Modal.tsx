@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface ModalProps {
   isOpen: boolean
@@ -9,6 +10,7 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, width = '480px' }: ModalProps) {
+  const isMobile = useIsMobile()
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: KeyboardEvent) => {
@@ -28,17 +30,17 @@ export default function Modal({ isOpen, onClose, title, children, width = '480px
         zIndex: 1000,
         background: 'var(--modal-overlay)',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: isMobile ? 'flex-end' : 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: isMobile ? 0 : '16px',
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         style={{
           width: '100%',
-          maxWidth: width,
-          maxHeight: '90vh',
+          maxWidth: isMobile ? '100%' : width,
+          maxHeight: isMobile ? '95vh' : '90vh',
           background: 'var(--bg-surface)',
           border: '2px solid var(--color-border-bright)',
           boxShadow: 'var(--shadow-hard)',

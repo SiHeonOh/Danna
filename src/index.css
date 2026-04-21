@@ -217,6 +217,7 @@ button.font-display {
   overflow: hidden;
   cursor: grab;
   user-select: none;
+  touch-action: none;
   transition: opacity 0.1s;
 }
 .calendar-block:active { cursor: grabbing; }

@@ -24,6 +24,7 @@ export default function BlockResizeHandle({ blockKey }: BlockResizeHandleProps) 
         cursor: 'ns-resize',
         background: 'rgba(255,255,255,0.1)',
         zIndex: 2,
+        touchAction: 'none',
       }}
     />
   )

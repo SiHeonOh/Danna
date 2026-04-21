@@ -2,6 +2,7 @@ import { format, isToday } from 'date-fns'
 import type { CalendarBlock } from '@/types/app.types'
 import TimeGrid from './TimeGrid'
 import AllDaySection from './AllDaySection'
+import type { ReactNode } from 'react'
 
 interface DayViewProps {
   date: Date
@@ -13,6 +14,7 @@ interface DayViewProps {
   onCompleteInstance: (block: CalendarBlock) => void
   onAllDayClick: (block: CalendarBlock) => void
   onAllDayAdd: (date: string) => void
+  planContent?: ReactNode
 }
 
 export default function DayView({
@@ -25,6 +27,7 @@ export default function DayView({
   onCompleteInstance,
   onAllDayClick,
   onAllDayAdd,
+  planContent,
 }: DayViewProps) {
   const dateStr = format(date, 'yyyy-MM-dd')
   const dayBlocks = blocks.filter((b) => b.date === dateStr)
@@ -120,18 +123,20 @@ export default function DayView({
         />
       </div>
 
-      {/* Scrollable time grid */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <TimeGrid
-          date={dateStr}
-          blocks={dayBlocks}
-          activeDragId={activeDragId}
-          isToday={today}
-          onSlotClick={onSlotClick}
-          onBlockDoubleClick={onBlockDoubleClick}
-          onCompleteInstance={onCompleteInstance}
-        />
-      </div>
+      {/* Scrollable time grid — replaced by plan panel when open on mobile */}
+      {planContent ?? (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <TimeGrid
+            date={dateStr}
+            blocks={dayBlocks}
+            activeDragId={activeDragId}
+            isToday={today}
+            onSlotClick={onSlotClick}
+            onBlockDoubleClick={onBlockDoubleClick}
+            onCompleteInstance={onCompleteInstance}
+          />
+        </div>
+      )}
     </div>
   )
 }

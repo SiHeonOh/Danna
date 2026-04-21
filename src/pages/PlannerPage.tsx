@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react'
 import { usePlanner } from '@/context/PlannerContext'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import Header from '@/components/layout/Header'
 import TaskSidebar from '@/components/sidebar/TaskSidebar'
 import CalendarRoot from '@/components/calendar/CalendarRoot'
 import ItemFormModal from '@/components/forms/ItemFormModal'
 import TagManagerModal from '@/components/forms/TagManagerModal'
 import BottomSheet from '@/components/layout/BottomSheet'
+import ViewFAB from '@/components/layout/ViewFAB'
 import type { ItemFormValues } from '@/types/app.types'
 
 type ViewMode = 'day' | 'week' | 'plan' | 'month'
@@ -18,16 +20,16 @@ export default function PlannerPage() {
     upsertRule, deleteRule, ruleForItem,
   } = usePlanner()
 
-  const [viewMode, setViewMode] = useState<ViewMode>('week')
+  const [viewMode, setViewMode] = useState<ViewMode>(() => window.innerWidth < 768 ? 'day' : 'week')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [newEventOpen, setNewEventOpen] = useState(false)
   const [newTaskOpen, setNewTaskOpen] = useState(false)
   const [tagManagerOpen, setTagManagerOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editItemId, setEditItemId] = useState<string | null>(null)
+  const [mobilePlanOpen, setMobilePlanOpen] = useState(false)
 
-  // Check if mobile
-  const isMobile = window.innerWidth < 768
+  const isMobile = useIsMobile()
 
   const editItem = editItemId ? (items.find(i => i.id === editItemId) ?? null) : null
   const editRule = editItem ? ruleForItem(editItem.id) : null
@@ -112,7 +114,7 @@ export default function PlannerPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
       <Header
-        viewMode={isMobile ? 'day' : viewMode}
+        viewMode={viewMode}
         currentDate={currentDate}
         onViewModeChange={setViewMode}
         onDateChange={setCurrentDate}
@@ -132,9 +134,10 @@ export default function PlannerPage() {
         {/* Calendar */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <CalendarRoot
-            viewMode={isMobile ? 'day' : viewMode}
+            viewMode={viewMode}
             currentDate={currentDate}
             onNavigate={(date, mode) => { setCurrentDate(date); setViewMode(mode) }}
+            mobilePlanOpen={mobilePlanOpen}
           />
         </div>
       </div>
@@ -143,15 +146,46 @@ export default function PlannerPage() {
       {isMobile && (
         <>
           <button
-            className="btn-neon"
+            className="font-mono"
             onClick={() => setSidebarOpen(true)}
             style={{
               position: 'fixed', bottom: 16, left: 16, zIndex: 100,
-              padding: '10px 16px', fontSize: 11,
+              padding: '8px 14px',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              minWidth: 80,
+              textAlign: 'center',
+              background: 'var(--color-primary)',
+              color: '#ffffff',
+              border: '2px solid var(--color-primary)',
+              boxShadow: '3px 3px 0 color-mix(in srgb, var(--color-primary) 40%, black)',
+              cursor: 'pointer',
             }}
           >
             INBOX
           </button>
+          <button
+            className="font-mono"
+            onClick={() => setMobilePlanOpen(v => !v)}
+            style={{
+              position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 100,
+              padding: '8px 14px',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              minWidth: 80,
+              textAlign: 'center',
+              background: mobilePlanOpen ? 'var(--color-primary)' : 'var(--bg-elevated)',
+              color: mobilePlanOpen ? '#ffffff' : 'var(--color-text-muted)',
+              border: `2px solid ${mobilePlanOpen ? 'var(--color-primary)' : 'var(--color-border-bright)'}`,
+              boxShadow: '3px 3px 0 color-mix(in srgb, var(--color-primary) 40%, black)',
+              cursor: 'pointer',
+            }}
+          >
+            PLAN
+          </button>
+          <ViewFAB viewMode={viewMode === 'plan' ? 'day' : viewMode} onViewModeChange={setViewMode} />
           <BottomSheet
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}

@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { formatDisplayTime, topFromTime, heightFromTimes } from '@/lib/dateUtils'
 import type { CalendarBlock as CalendarBlockType } from '@/types/app.types'
 import BlockResizeHandle from './BlockResizeHandle'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface CalendarBlockProps {
   block: CalendarBlockType
@@ -38,6 +39,7 @@ export default function CalendarBlock({
     id: block.key,
     data: { type: 'block', block },
   })
+  const isMobile = useIsMobile()
 
   const tagColor = block.tag?.color ?? '#555555'
   const completed = block.is_completed
@@ -67,7 +69,8 @@ export default function CalendarBlock({
       {...attributes}
       className={`calendar-block ${block.item.type === 'task' ? 'calendar-block-task' : 'calendar-block-event'}`}
       style={style}
-      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick(block) }}
+      onDoubleClick={!isMobile ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
+      onClick={isMobile ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, height: '100%' }}>
         {block.item.type === 'task' && (

@@ -8,6 +8,7 @@ import { startOfWeek, endOfWeek, startOfDay, endOfDay, startOfMonth, endOfMonth,
 import { usePlanner } from '@/context/PlannerContext'
 import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
 import { useDragState } from '@/hooks/useDragState'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { splitAtDate } from '@/lib/recurrence'
 import {
   snapMinutesTo15, timeStringToMinutes, minutesToTimeString,
@@ -27,9 +28,10 @@ interface CalendarRootProps {
   viewMode: ViewMode
   currentDate: Date
   onNavigate?: (date: Date, viewMode: ViewMode) => void
+  mobilePlanOpen?: boolean
 }
 
-export default function CalendarRoot({ viewMode, currentDate, onNavigate }: CalendarRootProps) {
+export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobilePlanOpen }: CalendarRootProps) {
   const {
     items, tags, rules, overrides,
     createItem, updateItem, deleteItem,
@@ -39,6 +41,7 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate }: Cale
   } = usePlanner()
 
   const { dragState, setDragging, clearDragging } = useDragState()
+  const isMobile = useIsMobile()
   const [resizingBlock, setResizingBlock] = useState<{ key: string; startEndTime: string } | null>(null)
 
   // Modal state
@@ -321,8 +324,9 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate }: Cale
         onDragMove={onDragMove}
         onDragEnd={onDragEnd}
       >
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
-          {viewMode === 'plan' ? (
+        {/* Build plan panel once — passed inline to DayView/WeekView so it replaces the time grid exactly */}
+        {(() => {
+          const planContent = (isMobile && mobilePlanOpen) ? (
             <PlanView
               date={currentDate}
               activeDragId={dragState.activeId}
@@ -344,38 +348,69 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate }: Cale
                 setFormOpen(true)
               }}
             />
-          ) : viewMode === 'day' ? (
-            <DayView
-              date={currentDate}
-              blocks={blocks}
-              allDayBlocks={allDayBlocks}
-              activeDragId={dragState.activeId}
-              onSlotClick={handleSlotClick}
-              onBlockDoubleClick={handleBlockDoubleClick}
-              onCompleteInstance={handleCompleteInstance}
-              onAllDayClick={handleBlockDoubleClick}
-              onAllDayAdd={handleAllDayAdd}
-            />
-          ) : viewMode === 'month' ? (
-            <MonthView
-              date={currentDate}
-              onDayClick={(d) => onNavigate?.(d, 'plan')}
-              onBlockDoubleClick={handleBlockDoubleClick}
-            />
-          ) : (
-            <WeekView
-              date={currentDate}
-              blocks={blocks}
-              allDayBlocks={allDayBlocks}
-              activeDragId={dragState.activeId}
-              onSlotClick={handleSlotClick}
-              onBlockDoubleClick={handleBlockDoubleClick}
-              onCompleteInstance={handleCompleteInstance}
-              onAllDayClick={handleBlockDoubleClick}
-              onAllDayAdd={handleAllDayAdd}
-            />
-          )}
-        </div>
+          ) : null
+
+          return (
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden', height: '100%' }}>
+              {viewMode === 'plan' ? (
+                <PlanView
+                  date={currentDate}
+                  activeDragId={dragState.activeId}
+                  onSlotClick={handleSlotClick}
+                  onBlockDoubleClick={handleBlockDoubleClick}
+                  onCompleteInstance={handleCompleteInstance}
+                  onAllDayClick={handleBlockDoubleClick}
+                  onAllDayAdd={handleAllDayAdd}
+                  onNewTask={() => { setFormDefaults({ date: undefined, type: 'task' }); setFormOpen(true) }}
+                  onEditItem={(id) => {
+                    const item = items.find(i => i.id === id)
+                    if (!item) return
+                    setEditingBlock({
+                      key: item.id, item, date: item.date ?? '', start_time: item.start_time ?? '',
+                      end_time: item.end_time ?? '', title: item.title, is_completed: item.is_completed,
+                      is_recurring: false, original_date: item.date ?? '', override_id: null,
+                      tag: item.tag_id ? (tags.find(t => t.id === item.tag_id) ?? null) : null,
+                    })
+                    setFormOpen(true)
+                  }}
+                />
+              ) : viewMode === 'day' ? (
+                <DayView
+                  date={currentDate}
+                  blocks={blocks}
+                  allDayBlocks={allDayBlocks}
+                  activeDragId={dragState.activeId}
+                  onSlotClick={handleSlotClick}
+                  onBlockDoubleClick={handleBlockDoubleClick}
+                  onCompleteInstance={handleCompleteInstance}
+                  onAllDayClick={handleBlockDoubleClick}
+                  onAllDayAdd={handleAllDayAdd}
+                  planContent={planContent}
+                />
+              ) : viewMode === 'month' ? (
+                <MonthView
+                  date={currentDate}
+                  onDayClick={(d) => onNavigate?.(d, isMobile ? 'day' : 'plan')}
+                  onBlockDoubleClick={handleBlockDoubleClick}
+                />
+              ) : (
+                <WeekView
+                  date={currentDate}
+                  blocks={blocks}
+                  allDayBlocks={allDayBlocks}
+                  activeDragId={dragState.activeId}
+                  onSlotClick={handleSlotClick}
+                  onBlockDoubleClick={handleBlockDoubleClick}
+                  onCompleteInstance={handleCompleteInstance}
+                  onAllDayClick={handleBlockDoubleClick}
+                  onAllDayAdd={handleAllDayAdd}
+                  planContent={planContent}
+                />
+              )}
+            </div>
+          )
+        })()}
+
         <DragOverlay modifiers={[restrictToWindowEdges]}>
           {dragState.activeId && !dragState.activeId.startsWith('resize::') && (
             <div style={{
