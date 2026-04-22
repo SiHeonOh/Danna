@@ -5,10 +5,10 @@ import './i18n' // must import before App so translations are ready
 import App from './App'
 
 // Service worker auto-update logic:
-// 1. When a new SW takes over, reload so the browser runs fresh JS bundles.
-// 2. On mobile PWAs, resuming from background doesn't trigger a navigation, so
-//    the browser never checks for a new SW on its own — we call registration.update()
-//    every time the app comes back to the foreground to force the check.
+// - controllerchange fires when a new SW takes over → reload to run fresh bundles.
+// - registration.update() on startup covers cold-open (force-close → reopen) where
+//   the browser may not run its own update check before serving cached content.
+// - visibilitychange covers resume-from-background without a full cold start.
 if ('serviceWorker' in navigator) {
   let refreshing = false
 
@@ -19,6 +19,10 @@ if ('serviceWorker' in navigator) {
   })
 
   navigator.serviceWorker.ready.then((registration) => {
+    // Immediate check on every cold start
+    registration.update().catch(() => {})
+
+    // Check again whenever the app comes back to foreground
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         registration.update().catch(() => {})
