@@ -93,7 +93,7 @@ export default function Header({
         flexShrink: 0,
         marginRight: isMobile ? 8 : 0,
       }}>
-        <GlitchText text="GRID" /><span style={{ fontSize: 8, color: 'var(--color-primary)', opacity: 0.6, marginLeft: 4, fontFamily: 'JetBrains Mono', lineHeight: 1 }}>v2</span>
+        <GlitchText text="GRID" />
       </h1>
 
       {/* Separator — desktop only */}
