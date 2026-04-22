@@ -91,8 +91,7 @@ export default function Header({
         textShadow: 'var(--glow-primary)',
         letterSpacing: '0.16em',
         flexShrink: 0,
-        marginLeft: 6,
-        marginRight: isMobile ? 8 : 0,
+        marginRight: isMobile ? 8 : 14,
       }}>
         <GlitchText text="DANNA" />
       </h1>
