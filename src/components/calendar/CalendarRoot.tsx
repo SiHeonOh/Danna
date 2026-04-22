@@ -75,7 +75,7 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
   // dnd-kit sensors — long press (200ms) activates on touch for mobile
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 500, tolerance: 10 } }),
   )
 
   function onDragStart(event: DragStartEvent) {
