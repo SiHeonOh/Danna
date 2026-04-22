@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+import { useRef } from 'react'
 import { formatDisplayTime, topFromTime, heightFromTimes } from '@/lib/dateUtils'
 import type { CalendarBlock as CalendarBlockType } from '@/types/app.types'
 import BlockResizeHandle from './BlockResizeHandle'
@@ -40,6 +41,18 @@ export default function CalendarBlock({
     data: { type: 'block', block },
   })
   const isMobile = useIsMobile()
+  const lastTapRef = useRef<number>(0)
+
+  function handleDoubleTap(e: React.MouseEvent) {
+    e.stopPropagation()
+    const now = Date.now()
+    if (now - lastTapRef.current < 300) {
+      lastTapRef.current = 0
+      onDoubleClick(block)
+    } else {
+      lastTapRef.current = now
+    }
+  }
 
   const tagColor = block.tag?.color ?? '#555555'
   const completed = block.is_completed
@@ -70,7 +83,7 @@ export default function CalendarBlock({
       className={`calendar-block ${block.item.type === 'task' ? 'calendar-block-task' : 'calendar-block-event'}`}
       style={style}
       onDoubleClick={!isMobile ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
-      onClick={isMobile ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
+      onClick={isMobile ? handleDoubleTap : undefined}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, height: '100%' }}>
         {/* Mobile-only drag handle — touch-action:none scoped to this strip only */}
@@ -97,6 +110,7 @@ export default function CalendarBlock({
             className="cyber-checkbox"
             checked={completed}
             onChange={(e) => { e.stopPropagation(); onCompleteInstance?.(block) }}
+            onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             style={{
               marginTop: 2,
