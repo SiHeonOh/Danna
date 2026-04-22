@@ -239,8 +239,20 @@ button.font-display {
   overflow: hidden;
   cursor: grab;
   user-select: none;
-  touch-action: none;
+  touch-action: pan-y;   /* allow scroll on the block body; handle overrides for drag */
   transition: opacity 0.1s;
+}
+
+.calendar-block-handle {
+  touch-action: none;    /* only the handle captures touch for drag */
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 12px;
+  opacity: 0.55;
+  align-self: stretch;
 }
 .calendar-block:active { cursor: grabbing; }
 .calendar-block.is-dragging { opacity: 0.4; }

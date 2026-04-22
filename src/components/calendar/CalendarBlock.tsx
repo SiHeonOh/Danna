@@ -65,7 +65,7 @@ export default function CalendarBlock({
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
+      {...(isMobile ? {} : listeners)}
       {...attributes}
       className={`calendar-block ${block.item.type === 'task' ? 'calendar-block-task' : 'calendar-block-event'}`}
       style={style}
@@ -73,6 +73,24 @@ export default function CalendarBlock({
       onClick={isMobile ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, height: '100%' }}>
+        {/* Mobile-only drag handle — touch-action:none scoped to this strip only */}
+        {isMobile && (
+          <div
+            {...listeners}
+            className="calendar-block-handle"
+            onClickCapture={(e) => e.stopPropagation()}
+          >
+            <span style={{
+              fontSize: 9,
+              lineHeight: 1,
+              color: textColor,
+              letterSpacing: '-1px',
+              pointerEvents: 'none',
+            }}>
+              ⠿
+            </span>
+          </div>
+        )}
         {block.item.type === 'task' && (
           <input
             type="checkbox"
