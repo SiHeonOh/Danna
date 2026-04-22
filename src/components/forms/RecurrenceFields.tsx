@@ -1,4 +1,5 @@
 import type { UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import type { ItemFormValues } from '@/types/app.types'
 
 const DAYS = [
@@ -18,8 +19,10 @@ interface RecurrenceFieldsProps {
 }
 
 export default function RecurrenceFields({ register, watch, setValue }: RecurrenceFieldsProps) {
+  const { t } = useTranslation()
   const frequency = watch('recurrence.frequency')
   const daysOfWeek = watch('recurrence.days_of_week') ?? []
+  const monthNames = t('recurrence.monthNames', { returnObjects: true }) as string[]
 
   function toggleDay(day: string) {
     const current = daysOfWeek ?? []
@@ -33,18 +36,18 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
-        <label>Frequency</label>
+        <label>{t('recurrence.frequency')}</label>
         <select {...register('recurrence.frequency')}>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-          <option value="custom">Custom (every N days)</option>
+          <option value="daily">{t('recurrence.daily')}</option>
+          <option value="weekly">{t('recurrence.weekly')}</option>
+          <option value="monthly">{t('recurrence.monthly')}</option>
+          <option value="yearly">{t('recurrence.yearly')}</option>
+          <option value="custom">{t('recurrence.custom')}</option>
         </select>
       </div>
 
       <div>
-        <label>Every</label>
+        <label>{t('recurrence.every')}</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input
             type="number"
@@ -55,19 +58,19 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
           />
           <span className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
             {frequency === 'daily' || frequency === 'custom'
-              ? 'day(s)'
+              ? t('recurrence.days')
               : frequency === 'weekly'
-              ? 'week(s)'
+              ? t('recurrence.weeks')
               : frequency === 'monthly'
-              ? 'month(s)'
-              : 'year(s)'}
+              ? t('recurrence.months')
+              : t('recurrence.years')}
           </span>
         </div>
       </div>
 
       {(frequency === 'weekly' || frequency === 'custom') && (
         <div>
-          <label>Days of Week</label>
+          <label>{t('recurrence.daysOfWeek')}</label>
           <div style={{ display: 'flex', gap: 4 }}>
             {DAYS.map((d) => (
               <button
@@ -79,7 +82,7 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
                   width: 28,
                   height: 28,
                   background: daysOfWeek.includes(d.key) ? 'var(--color-primary)' : 'transparent',
-                  color: daysOfWeek.includes(d.key) ? 'var(--bg-base)' : 'var(--color-text-muted)',
+                  color: daysOfWeek.includes(d.key) ? 'var(--bg-base)' : 'var(--color-text)',
                   border: `1px solid ${daysOfWeek.includes(d.key) ? 'var(--color-primary)' : 'var(--color-border-bright)'}`,
                   fontSize: 11,
                   cursor: 'pointer',
@@ -96,7 +99,7 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
       {frequency === 'monthly' && (
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <label>Day of Month</label>
+            <label>{t('recurrence.dayOfMonth')}</label>
             <input
               type="number"
               min={1}
@@ -106,14 +109,14 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
             />
           </div>
           <div style={{ flex: 1 }}>
-            <label>Ordinal (optional)</label>
+            <label>{t('recurrence.ordinal')}</label>
             <select {...register('recurrence.ordinal')}>
-              <option value="">None</option>
-              <option value="first">First</option>
-              <option value="second">Second</option>
-              <option value="third">Third</option>
-              <option value="fourth">Fourth</option>
-              <option value="last">Last</option>
+              <option value="">{t('recurrence.ordinals.none')}</option>
+              <option value="first">{t('recurrence.ordinals.first')}</option>
+              <option value="second">{t('recurrence.ordinals.second')}</option>
+              <option value="third">{t('recurrence.ordinals.third')}</option>
+              <option value="fourth">{t('recurrence.ordinals.fourth')}</option>
+              <option value="last">{t('recurrence.ordinals.last')}</option>
             </select>
           </div>
         </div>
@@ -122,15 +125,15 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
       {frequency === 'yearly' && (
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <label>Month</label>
+            <label>{t('recurrence.monthLabel')}</label>
             <select {...register('recurrence.month_of_year', { valueAsNumber: true })}>
-              {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-                <option key={m} value={i + 1}>{m}</option>
+              {monthNames.map((m, i) => (
+                <option key={i} value={i + 1}>{m}</option>
               ))}
             </select>
           </div>
           <div style={{ flex: 1 }}>
-            <label>Day</label>
+            <label>{t('recurrence.day')}</label>
             <input
               type="number"
               min={1}
@@ -142,7 +145,7 @@ export default function RecurrenceFields({ register, watch, setValue }: Recurren
       )}
 
       <div>
-        <label>End Date (optional)</label>
+        <label>{t('recurrence.endDate')}</label>
         <input type="date" {...register('recurrence.end_date')} />
       </div>
     </div>

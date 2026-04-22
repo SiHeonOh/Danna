@@ -1,4 +1,5 @@
 import { format, isToday, isSameMonth, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
+import { useTranslation } from 'react-i18next'
 import { usePlanner } from '@/context/PlannerContext'
 import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
 import type { CalendarBlock } from '@/types/app.types'
@@ -9,10 +10,10 @@ interface MonthViewProps {
   onBlockDoubleClick: (block: CalendarBlock) => void
 }
 
-const DOW = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
-
 export default function MonthView({ date, onDayClick, onBlockDoubleClick }: MonthViewProps) {
   const { items, tags, rules, overrides } = usePlanner()
+  const { t } = useTranslation()
+  const DOW = t('calendar.dow', { returnObjects: true }) as string[]
 
   const monthStart = startOfMonth(date)
   const monthEnd   = endOfMonth(date)

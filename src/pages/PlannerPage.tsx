@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { usePlanner } from '@/context/PlannerContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import Header from '@/components/layout/Header'
@@ -32,6 +33,7 @@ export default function PlannerPage() {
 
   const isMobile = useIsMobile()
   const isOnline = useIsOnline()
+  const { t } = useTranslation()
 
   const editItem = editItemId ? (items.find(i => i.id === editItemId) ?? null) : null
   const editRule = editItem ? ruleForItem(editItem.id) : null
@@ -139,7 +141,7 @@ export default function PlannerPage() {
             flexShrink: 0,
           }}
         >
-          ⚠ OFFLINE — SHOWING LAST SAVED DATA
+          {t('common.offline')}
         </div>
       )}
 
@@ -184,7 +186,7 @@ export default function PlannerPage() {
               cursor: 'pointer',
             }}
           >
-            INBOX
+            {t('nav.inbox').toUpperCase()}
           </button>
           <button
             className="font-mono"
@@ -204,13 +206,13 @@ export default function PlannerPage() {
               cursor: 'pointer',
             }}
           >
-            PLAN
+            {t('nav.plan').toUpperCase()}
           </button>
           <ViewFAB viewMode={viewMode === 'plan' ? 'day' : viewMode} onViewModeChange={setViewMode} />
           <BottomSheet
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
-            title="INBOX"
+            title={t('nav.inbox').toUpperCase()}
           >
             <TaskSidebar
               onNewTask={() => { setSidebarOpen(false); setNewTaskOpen(true) }}

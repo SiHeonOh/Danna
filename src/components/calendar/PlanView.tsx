@@ -1,5 +1,7 @@
 import { format, isToday, startOfDay, endOfDay } from 'date-fns'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
+import { useTranslation } from 'react-i18next'
+import { useDateLocale } from '@/hooks/useDateLocale'
 import { formatDisplayTime, timeStringToMinutes } from '@/lib/dateUtils'
 import { usePlanner } from '@/context/PlannerContext'
 import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
@@ -101,7 +103,7 @@ function DraggableInboxTask({
         padding: '6px 8px',
         marginBottom: 3,
         borderLeft: `3px dashed ${tagColor}`,
-        background: `${tagColor}14`,
+        background: `${tagColor}3a`,
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
         touchAction: 'none',
@@ -151,6 +153,8 @@ export default function PlanView({
   onEditItem,
 }: PlanViewProps) {
   const { items, tags, rules, overrides, tagById, toggleComplete, upsertOverride } = usePlanner()
+  const { t } = useTranslation()
+  const dateLocale = useDateLocale()
   const dateStr = format(date, 'yyyy-MM-dd')
   const from = startOfDay(date)
   const to = endOfDay(date)
@@ -228,7 +232,7 @@ export default function PlanView({
                 letterSpacing: '0.06em',
                 lineHeight: 1,
               }}>
-                {format(date, 'EEEE').toUpperCase()}
+                {format(date, 'EEEE', { locale: dateLocale }).toUpperCase()}
               </span>
               <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
                 {format(date, 'yyyy-MM-dd')}
@@ -238,8 +242,8 @@ export default function PlanView({
               <span style={{ color: today ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
                 {remainingCount}
               </span>
-              {' REMAINING · '}
-              <span>{doneCount} DONE</span>
+              {' '}{t('plan.remaining').toUpperCase()}{' · '}
+              <span>{doneCount} {t('plan.done').toUpperCase()}</span>
             </div>
           </div>
         </div>}
@@ -252,7 +256,7 @@ export default function PlanView({
               {/* Stencil header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)' }}>
                 <div style={{ width: 3, height: 13, background: 'var(--color-accent)', flexShrink: 0 }} />
-                <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-accent)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>ALL-DAY</span>
+                <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-accent)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>{t('plan.allDay').toUpperCase()}</span>
                 <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
                 <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{allDayForDay.length}</span>
               </div>
@@ -270,7 +274,7 @@ export default function PlanView({
                         padding: '5px 8px',
                         marginBottom: 3,
                         borderLeft: `3px solid ${tagColor}`,
-                        background: `${tagColor}18`,
+                        background: `${tagColor}3a`,
                         cursor: 'pointer',
                       }}
                     >
@@ -289,7 +293,7 @@ export default function PlanView({
             {/* Stencil header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)' }}>
               <div style={{ width: 3, height: 13, background: 'var(--color-primary)', flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>SCHEDULED</span>
+              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>{t('plan.scheduled').toUpperCase()}</span>
               <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
               <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{scheduledBlocks.length}</span>
             </div>
@@ -297,8 +301,8 @@ export default function PlanView({
             {scheduledBlocks.length === 0 ? (
               <div style={{ padding: '10px 14px' }}>
                 <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0 }}>
-                  Nothing scheduled.
-                  <br />Click a time slot on the right to add something.
+                  {t('plan.nothingScheduled')}
+                  <br />{t('plan.nothingScheduledHint')}
                 </p>
               </div>
             ) : (
@@ -316,7 +320,7 @@ export default function PlanView({
                         padding: '7px 10px',
                         marginBottom: 3,
                         borderLeft: `3px ${block.item.type === 'task' ? 'dashed' : 'solid'} ${tagColor}`,
-                        background: done ? `${tagColor}10` : `${tagColor}22`,
+                        background: done ? `${tagColor}28` : `${tagColor}60`,
                         cursor: 'pointer',
                         opacity: done ? 0.6 : 1,
                       }}
@@ -375,7 +379,7 @@ export default function PlanView({
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)', borderTop: '2px solid var(--color-border)', marginTop: 4 }}>
               <div style={{ width: 3, height: 13, background: 'var(--color-primary)', flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>TO DO</span>
+              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>{t('plan.toDo').toUpperCase()}</span>
               <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
               <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginRight: 6 }}>
                 {todoTasks.filter((t) => !t.is_completed).length}
@@ -385,7 +389,7 @@ export default function PlanView({
                 style={{ padding: '2px 8px', fontSize: 9, flexShrink: 0 }}
                 onClick={() => onSlotClick(dateStr, '')}
               >
-                + TASK
+                {t('plan.newTask')}
               </button>
             </div>
 
@@ -393,8 +397,8 @@ export default function PlanView({
             <div style={{ padding: '6px 10px 8px' }}>
               {todoTasks.filter((t) => !t.is_completed).length === 0 && (
                 <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '6px 4px', padding: 0 }}>
-                  No tasks for this day.
-                  <br />Drag onto the timeline to schedule.
+                  {t('plan.noTasksForDay')}
+                  <br />{t('plan.noTasksForDayHint')}
                 </p>
               )}
               {todoTasks.filter((t) => !t.is_completed).map((item) => {
@@ -414,7 +418,7 @@ export default function PlanView({
                 <div style={{ marginTop: 8, opacity: 0.5 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <div style={{ width: 2, height: 11, background: 'var(--color-border-bright)', flexShrink: 0 }} />
-                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>COMPLETED</span>
+                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>{t('plan.completed').toUpperCase()}</span>
                   </div>
                   {todoTasks.filter((t) => t.is_completed).map((item) => {
                     const tag = tagById(item.tag_id)
@@ -445,7 +449,7 @@ export default function PlanView({
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)', borderTop: '2px solid var(--color-border)', marginTop: 4 }}>
               <div style={{ width: 3, height: 13, background: 'var(--color-primary)', flexShrink: 0 }} />
-              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>INBOX</span>
+              <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>{t('plan.inbox').toUpperCase()}</span>
               <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
               <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginRight: 6 }}>
                 {inboxTasks.filter((t) => !t.is_completed).length}
@@ -455,7 +459,7 @@ export default function PlanView({
                 style={{ padding: '2px 8px', fontSize: 9, flexShrink: 0 }}
                 onClick={onNewTask}
               >
-                + TASK
+                {t('plan.newTask')}
               </button>
             </div>
 
@@ -463,7 +467,7 @@ export default function PlanView({
             <div style={{ padding: '6px 10px 8px' }}>
               {inboxTasks.filter((t) => !t.is_completed).length === 0 && (
                 <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: '6px 4px', padding: 0 }}>
-                  No unscheduled tasks.
+                  {t('plan.noUnscheduledTasks')}
                 </p>
               )}
               {inboxTasks.filter((t) => !t.is_completed).map((item) => {
@@ -483,7 +487,7 @@ export default function PlanView({
                 <div style={{ marginTop: 8, opacity: 0.5 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <div style={{ width: 2, height: 11, background: 'var(--color-border-bright)', flexShrink: 0 }} />
-                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>COMPLETED</span>
+                    <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>{t('plan.completed').toUpperCase()}</span>
                   </div>
                   {inboxTasks.filter((t) => t.is_completed).map((item) => {
                     const tag = tagById(item.tag_id)

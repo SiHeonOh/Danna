@@ -17,6 +17,28 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Promise';
+  src: url('/fonts/Promise.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Korean font overrides — only active when data-lang="ko" is on <html> */
+[data-lang="ko"] body {
+  font-family: 'Promise', 'Space Grotesk', system-ui, sans-serif;
+}
+
+[data-lang="ko"] .font-mono {
+  font-family: 'Promise', 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+[data-lang="ko"] .font-display {
+  font-family: 'Promise', 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.02em;
+}
+
 /* ─── CSS Custom Properties ─────────────────────────────────────── */
 
 :root[data-theme="dark"] {
@@ -27,9 +49,9 @@
   --color-secondary: #e8e8e8;
   --color-accent: #CC1200;
   --color-text: #c8c8c8;
-  --color-text-muted: #484848;
-  --color-border: #181818;
-  --color-border-bright: #2c2c2c;
+  --color-text-muted: #7a7a7a;
+  --color-border: #8c1e12;
+  --color-border-bright: #404040;
   --shadow-hard: 3px 3px 0px #CC1200;
   --shadow-hard-sm: 2px 2px 0px #CC1200;
   --shadow-hard-pink: 3px 3px 0px #e8e8e8;
@@ -266,17 +288,21 @@ button.font-display {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.1s, box-shadow 0.1s, color 0.1s;
+  transition: background 0.1s, box-shadow 0.08s, color 0.1s, transform 0.08s;
   line-height: 1.4;
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--color-primary) 45%, #000000);
 }
 .btn-neon:hover {
   background: var(--color-primary);
   color: var(--bg-base);
-  box-shadow: var(--shadow-hard);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--color-primary) 45%, #000000);
+  transform: translate(-1px, -1px);
 }
 .btn-neon:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-pink {
@@ -301,7 +327,7 @@ button.font-display {
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   border: 2px solid var(--color-border-bright);
   padding: 5px 12px;
   font-family: 'Barlow Condensed', sans-serif;
@@ -310,13 +336,24 @@ button.font-display {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 0.1s, border-color 0.1s, background 0.1s;
+  transition: color 0.1s, border-color 0.1s, background 0.1s, box-shadow 0.08s, transform 0.08s;
   line-height: 1.4;
+  box-shadow: 2px 2px 0 var(--color-border-bright);
 }
 .btn-ghost:hover {
-  color: var(--color-text);
-  border-color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--color-primary) 45%, #000000);
+  transform: translate(-1px, -1px);
+}
+
+/* View-tab buttons in the header — colours are all inline, this just adds pop + lift */
+.btn-view-tab {
+  transition: transform 0.08s, box-shadow 0.08s, background 0.1s, color 0.1s, border-color 0.1s;
+}
+.btn-view-tab:hover {
+  transform: translate(-1px, -1px);
 }
 
 /* ─── Inputs ─────────────────────────────────────────────────────── */

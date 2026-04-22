@@ -1,4 +1,5 @@
 import { format, isToday } from 'date-fns'
+import { useDateLocale } from '@/hooks/useDateLocale'
 import type { CalendarBlock } from '@/types/app.types'
 import TimeGrid from './TimeGrid'
 import AllDaySection from './AllDaySection'
@@ -32,6 +33,7 @@ export default function DayView({
   const dateStr = format(date, 'yyyy-MM-dd')
   const dayBlocks = blocks.filter((b) => b.date === dateStr)
   const today = isToday(date)
+  const dateLocale = useDateLocale()
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -75,7 +77,7 @@ export default function DayView({
               letterSpacing: '0.06em',
             }}
           >
-            {format(date, 'EEEE').toUpperCase()}
+            {format(date, 'EEEE', { locale: dateLocale }).toUpperCase()}
           </span>
           <span
             className="font-mono"

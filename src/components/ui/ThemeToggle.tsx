@@ -9,7 +9,7 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       className="btn-ghost font-mono"
-      style={{ padding: isMobile ? '4px 8px' : undefined, fontSize: isMobile ? 16 : undefined, flexShrink: 0 }}
+      style={{ padding: isMobile ? '5px 8px' : undefined, fontSize: isMobile ? 16 : undefined, flexShrink: 0 }}
       title="Toggle theme"
     >
       {isMobile ? (theme === 'dark' ? '◑' : '◐') : (theme === 'dark' ? '◑ LIGHT' : '◐ DARK')}

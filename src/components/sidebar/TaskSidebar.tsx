@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { usePlanner } from '@/context/PlannerContext'
 import { UnscheduledTask } from './UnscheduledTask'
 import TagFilter from './TagFilter'
@@ -106,6 +107,7 @@ function GoalTab({
   onEditItem: (id: string) => void
 }) {
   const { items, tagById, toggleComplete, createItem } = usePlanner()
+  const { t } = useTranslation()
   const [newTitle, setNewTitle] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -138,7 +140,6 @@ function GoalTab({
     inputRef.current?.focus()
   }
 
-  const label = period === 'weekly' ? 'WEEK' : 'MONTH'
   const accent = 'var(--color-primary)'
 
   return (
@@ -148,7 +149,7 @@ function GoalTab({
         <div style={{ padding: '8px 10px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
             <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
-              {complete.length} / {goals.length} COMPLETE
+              {complete.length} / {goals.length} {t('sidebar.complete').toUpperCase()}
             </span>
             <span className="font-mono" style={{ fontSize: 10, color: accent }}>
               {Math.round((complete.length / goals.length) * 100)}%
@@ -173,9 +174,8 @@ function GoalTab({
       {/* Goal list */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px' }}>
         {incomplete.length === 0 && complete.length === 0 && (
-          <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', padding: '8px 4px' }}>
-            No {label.toLowerCase()} goals yet.
-            <br />Type below to add one.
+          <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', padding: '8px 4px', whiteSpace: 'pre-line' }}>
+            {period === 'weekly' ? t('sidebar.noWeekGoals') : t('sidebar.noMonthGoals')}
           </p>
         )}
 
@@ -198,7 +198,7 @@ function GoalTab({
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, marginBottom: 4, paddingLeft: 4, borderTop: '1px solid var(--color-border)', paddingTop: 6 }}>
               <div style={{ width: 2, height: 11, background: 'var(--color-border-bright)', flexShrink: 0 }} />
               <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>
-                COMPLETED
+                {t('sidebar.completed').toUpperCase()}
               </span>
             </div>
             {complete.map((item) => {
@@ -231,8 +231,8 @@ function GoalTab({
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleAdd() }}
-            placeholder={`Add ${label.toLowerCase()} goal...`}
-            style={{ flex: 1, padding: '5px 8px', fontSize: 12, border: '2px solid var(--color-border-bright)' }}
+            placeholder={period === 'weekly' ? t('sidebar.addWeekGoalPlaceholder') : t('sidebar.addMonthGoalPlaceholder')}
+            style={{ flex: 1, padding: '5px 8px', fontSize: 12, border: '2px solid var(--color-primary)' }}
           />
           <button
             className="btn-neon"
@@ -244,7 +244,7 @@ function GoalTab({
           </button>
         </div>
         <div className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Double-click any goal to edit details
+          {t('sidebar.doubleClickToEdit')}
         </div>
       </div>
     </div>
@@ -253,6 +253,7 @@ function GoalTab({
 
 export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps) {
   const { items, tags, toggleComplete, tagById, activeTagFilter, setActiveTagFilter } = usePlanner()
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<Tab>('inbox')
   const isMobile = useIsMobile()
 
@@ -268,9 +269,9 @@ export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps)
   const complete = unscheduled.filter((i) => i.is_completed)
 
   const TABS: { id: Tab; label: string; accent: string }[] = [
-    { id: 'inbox',   label: 'INBOX',   accent: 'var(--color-primary)' },
-    { id: 'weekly',  label: 'WEEK',    accent: 'var(--color-primary)' },
-    { id: 'monthly', label: 'MONTH',   accent: 'var(--color-primary)' },
+    { id: 'inbox',   label: t('sidebar.inboxTab'),   accent: 'var(--color-primary)' },
+    { id: 'weekly',  label: t('sidebar.weekTab'),    accent: 'var(--color-primary)' },
+    { id: 'monthly', label: t('sidebar.monthTab'),   accent: 'var(--color-primary)' },
   ]
 
   return (
@@ -305,7 +306,7 @@ export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps)
               cursor: 'pointer',
               transition: 'background 0.1s, color 0.1s',
               background: activeTab === tab.id ? 'var(--color-primary)' : 'transparent',
-              color: activeTab === tab.id ? '#ffffff' : 'var(--color-text-muted)',
+              color: activeTab === tab.id ? '#ffffff' : 'var(--color-text)',
               border: activeTab === tab.id
                 ? '2px solid var(--color-primary)'
                 : '2px solid var(--color-border-bright)',
@@ -322,10 +323,10 @@ export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps)
           {/* Stencil section header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, background: 'var(--bg-elevated)' }}>
             <div style={{ width: 3, height: 13, background: 'var(--color-primary)', flexShrink: 0 }} />
-            <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>UNSCHEDULED</span>
+            <span style={{ fontFamily: "'Maratype', 'Barlow Condensed', sans-serif", fontSize: 11, color: 'var(--color-primary)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0 }}>{t('sidebar.unscheduled').toUpperCase()}</span>
             <div style={{ flex: 1, height: 1, background: 'var(--color-border-bright)', opacity: 0.4 }} />
             <button className="btn-neon" style={{ padding: '2px 8px', fontSize: 10, flexShrink: 0 }} onClick={onNewTask}>
-              + TASK
+              {t('sidebar.addTask')}
             </button>
           </div>
 
@@ -337,8 +338,8 @@ export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps)
           <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px' }}>
             {incomplete.length === 0 && complete.length === 0 && (
               <p className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)', padding: '8px 4px' }}>
-                No unscheduled tasks.
-                <br />Drag tasks onto the calendar to schedule them.
+                {t('sidebar.noUnscheduledTasks')}
+                <br />{t('sidebar.noUnscheduledHint')}
               </p>
             )}
             {incomplete.map((item) => (
@@ -355,7 +356,7 @@ export default function TaskSidebar({ onNewTask, onEditItem }: TaskSidebarProps)
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, marginBottom: 4, paddingLeft: 2 }}>
                   <div style={{ width: 2, height: 11, background: 'var(--color-border-bright)', flexShrink: 0 }} />
                   <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>
-                    COMPLETED
+                    {t('sidebar.completed').toUpperCase()}
                   </span>
                 </div>
                 {complete.map((item) => (

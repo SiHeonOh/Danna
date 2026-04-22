@@ -1,5 +1,7 @@
 import { format, isToday } from 'date-fns'
+import { useTranslation } from 'react-i18next'
 import { weekDays, TOTAL_SLOTS, minutesToTimeString, formatDisplayTime, SLOT_HEIGHT_PX } from '@/lib/dateUtils'
+import { useDateLocale } from '@/hooks/useDateLocale'
 import type { CalendarBlock as CalendarBlockType } from '@/types/app.types'
 import TimeSlot from './TimeSlot'
 import CalendarBlock from './CalendarBlock'
@@ -39,6 +41,8 @@ export default function WeekView({
 }: WeekViewProps) {
   const days = weekDays(date)
   const isMobile = useIsMobile()
+  const { t } = useTranslation()
+  const dateLocale = useDateLocale()
   const labelCol = isMobile ? 28 : 56
 
   // On mobile each day column is at least 44px wide — allow horizontal scroll if needed
@@ -84,7 +88,7 @@ export default function WeekView({
                     lineHeight: 1,
                   }}
                 >
-                  {format(d, 'EEE').toUpperCase()}
+                  {format(d, 'EEE', { locale: dateLocale }).toUpperCase()}
                 </span>
               )}
               <span
@@ -99,7 +103,7 @@ export default function WeekView({
                   marginTop: isMobile ? 0 : 2,
                 }}
               >
-                {format(d, isMobile ? 'EEE d' : 'd')}
+                {isMobile ? format(d, 'EEE d', { locale: dateLocale }) : format(d, 'd')}
               </span>
               {today && (
                 <div
@@ -145,9 +149,10 @@ export default function WeekView({
               letterSpacing: '0.06em',
               textAlign: 'center',
               lineHeight: 1.3,
+              whiteSpace: 'pre-line',
             }}
           >
-            ALL{'\n'}DAY
+            {t('calendar.allDay')}
           </span>
         </div>
         {days.map((d) => (

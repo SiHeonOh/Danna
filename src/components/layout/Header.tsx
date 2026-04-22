@@ -1,8 +1,10 @@
 import { addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, format } from 'date-fns'
+import { useTranslation } from 'react-i18next'
 import GlitchText from '@/components/ui/GlitchText'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useAuth } from '@/context/AuthContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { useDateLocale } from '@/hooks/useDateLocale'
 
 type ViewMode = 'day' | 'week' | 'plan' | 'month'
 
@@ -20,6 +22,8 @@ export default function Header({
 }: HeaderProps) {
   const { signOut } = useAuth()
   const isMobile = useIsMobile()
+  const { t, i18n } = useTranslation()
+  const dateLocale = useDateLocale()
 
   function goBack() {
     if (viewMode === 'week') onDateChange(subWeeks(currentDate, 1))
@@ -31,17 +35,29 @@ export default function Header({
     else if (viewMode === 'month') onDateChange(addMonths(currentDate, 1))
     else onDateChange(addDays(currentDate, 1))
   }
-  function goToday() {
-    onDateChange(new Date())
+  function goToday() { onDateChange(new Date()) }
+
+  function toggleLanguage() {
+    const next = i18n.language?.startsWith('ko') ? 'en' : 'ko'
+    i18n.changeLanguage(next)
+    // Drive Korean font overrides via data attribute on <html>
+    document.documentElement.dataset.lang = next
+  }
+
+  // Set data-lang on mount to match persisted language
+  if (typeof document !== 'undefined') {
+    document.documentElement.dataset.lang = i18n.language?.startsWith('ko') ? 'ko' : 'en'
   }
 
   const dateLabel = viewMode === 'week'
-    ? `${format(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay() + 1), 'MMM d')} — ${format(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay() + 7), 'MMM d, yyyy')}`.toUpperCase()
+    ? `${format(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay() + 1), 'MMM d', { locale: dateLocale })} — ${format(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - currentDate.getDay() + 7), 'MMM d, yyyy', { locale: dateLocale })}`.toUpperCase()
     : viewMode === 'month'
-      ? format(currentDate, 'MMMM yyyy').toUpperCase()
+      ? format(currentDate, 'MMMM yyyy', { locale: dateLocale }).toUpperCase()
       : isMobile
-        ? format(currentDate, 'MMM d').toUpperCase()
-        : format(currentDate, 'MMM d, yyyy').toUpperCase()
+        ? format(currentDate, 'MMM d', { locale: dateLocale }).toUpperCase()
+        : format(currentDate, 'MMM d, yyyy', { locale: dateLocale }).toUpperCase()
+
+  const isKorean = i18n.language?.startsWith('ko')
 
   return (
     <div
@@ -80,7 +96,7 @@ export default function Header({
         <GlitchText text="GRID" />
       </h1>
 
-      {/* Separator — hidden on mobile */}
+      {/* Separator — desktop only */}
       {!isMobile && (
         <div style={{ width: 2, height: 28, background: 'var(--color-border-bright)', flexShrink: 0, marginLeft: 4 }} />
       )}
@@ -89,111 +105,111 @@ export default function Header({
       <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
         <button
           className="btn-ghost"
-          style={{ padding: '3px 10px', fontSize: 18, lineHeight: 1, letterSpacing: 0 }}
+          style={{ padding: '5px 10px', fontSize: 18, lineHeight: 1, letterSpacing: 0 }}
           onClick={goBack}
         >‹</button>
         {!isMobile && (
           <button
             className="btn-ghost"
-            style={{ padding: '3px 12px', fontSize: 12, marginLeft: -2 }}
+            style={{ padding: '5px 12px', fontSize: 12, marginLeft: -2 }}
             onClick={goToday}
-          >TODAY</button>
+          >{t('nav.today')}</button>
         )}
         <button
           className="btn-ghost"
-          style={{ padding: '3px 10px', fontSize: 18, lineHeight: 1, letterSpacing: 0, marginLeft: -2 }}
+          style={{ padding: '5px 10px', fontSize: 18, lineHeight: 1, letterSpacing: 0, marginLeft: -2 }}
           onClick={goForward}
         >›</button>
       </div>
 
-      {/* Date label — tappable on mobile to jump to today */}
+      {/* Date label */}
       {isMobile ? (
         <button
           className="font-mono"
           onClick={goToday}
           style={{
-            fontSize: 11,
-            fontWeight: 700,
+            fontSize: 11, fontWeight: 700,
             color: 'var(--color-primary)',
-            flexShrink: 0,
-            letterSpacing: '0.04em',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
+            flexShrink: 0, letterSpacing: '0.04em',
+            background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
           }}
-        >
-          {dateLabel}
-        </button>
+        >{dateLabel}</button>
       ) : (
         <span className="font-mono" style={{
-          fontSize: 12,
-          fontWeight: 700,
+          fontSize: 12, fontWeight: 700,
           color: 'var(--color-primary)',
-          flexShrink: 0,
-          letterSpacing: '0.04em',
-          marginLeft: 4,
-        }}>
-          {dateLabel}
-        </span>
+          flexShrink: 0, letterSpacing: '0.04em', marginLeft: 4,
+        }}>{dateLabel}</span>
       )}
 
       <div style={{ flex: 1 }} />
 
-      {/* View toggle — desktop only; mobile uses ViewFAB floating button */}
+      {/* View toggle — desktop only */}
       {!isMobile && (
         <div style={{ display: 'flex' }}>
           {([
-            { id: 'plan',  label: 'PLAN'  },
-            { id: 'day',   label: 'DAY'   },
-            { id: 'week',  label: 'WEEK'  },
-            { id: 'month', label: 'MONTH' },
-          ] as const).map(({ id, label }, idx) => (
-            <button
-              key={id}
-              className="font-display"
-              onClick={() => onViewModeChange(id)}
-              style={{
-                padding: '4px 14px',
-                fontSize: 13,
-                background: viewMode === id ? 'var(--color-primary)' : 'transparent',
-                color: viewMode === id ? '#ffffff' : 'var(--color-text-muted)',
-                border: `2px solid ${viewMode === id ? 'var(--color-primary)' : 'var(--color-border-bright)'}`,
-                marginLeft: idx > 0 ? -2 : 0,
-                cursor: 'pointer',
-                letterSpacing: '0.1em',
-                position: 'relative',
-                zIndex: viewMode === id ? 1 : 0,
-                lineHeight: 1.4,
-              }}
-            >
-              {label}
-            </button>
-          ))}
+            { id: 'plan',  key: 'nav.plan'  },
+            { id: 'day',   key: 'nav.day'   },
+            { id: 'week',  key: 'nav.week'  },
+            { id: 'month', key: 'nav.month' },
+          ] as const).map(({ id, key }, idx) => {
+            const active = viewMode === id
+            return (
+              <button
+                key={id}
+                className="font-display btn-view-tab"
+                onClick={() => onViewModeChange(id)}
+                style={{
+                  padding: '5px 12px', fontSize: 13,
+                  background: active ? 'var(--color-primary)' : 'transparent',
+                  color: active ? '#ffffff' : 'var(--color-text)',
+                  border: `2px solid ${active ? 'var(--color-primary)' : 'var(--color-border-bright)'}`,
+                  boxShadow: active
+                    ? '2px 2px 0 color-mix(in srgb, var(--color-primary) 45%, #000000)'
+                    : '2px 2px 0 var(--color-border-bright)',
+                  marginLeft: idx > 0 ? -2 : 0,
+                  cursor: 'pointer', letterSpacing: '0.1em',
+                  position: 'relative', zIndex: active ? 1 : 0, lineHeight: 1.4,
+                }}
+              >{t(key)}</button>
+            )
+          })}
         </div>
       )}
 
       <button
         className="btn-neon"
-        style={{ padding: isMobile ? '4px 10px' : '4px 14px', fontSize: 13, flexShrink: 0 }}
+        style={{ padding: isMobile ? '5px 10px' : '5px 14px', fontSize: 13, flexShrink: 0 }}
         onClick={onNewEvent}
       >
-        {isMobile ? '+ EVT' : '+ EVENT'}
+        {isMobile ? t('nav.addEventShort') : t('nav.addEvent')}
       </button>
+
       <button
         className="btn-ghost"
-        style={{ padding: isMobile ? '4px 8px' : '4px 12px', fontSize: 13, flexShrink: 0 }}
+        style={{ padding: isMobile ? '5px 8px' : '5px 12px', fontSize: 13, flexShrink: 0 }}
         onClick={onTagManager}
       >
-        {isMobile ? 'TAG' : 'TAGS'}
+        {isMobile ? t('nav.tags').slice(0, 3) : t('nav.tags')}
       </button>
+
+      {/* EN / KR language toggle */}
+      <button
+        className="btn-ghost font-mono"
+        style={{ padding: isMobile ? '5px 6px' : '5px 10px', fontSize: 11, fontWeight: 700, flexShrink: 0 }}
+        onClick={toggleLanguage}
+      >
+        {isKorean ? 'EN' : 'KR'}
+      </button>
+
       <ThemeToggle />
+
       <button
         className="btn-ghost"
-        style={{ padding: isMobile ? '4px 8px' : '4px 12px', fontSize: 13, flexShrink: 0 }}
+        style={{ padding: isMobile ? '5px 8px' : '5px 12px', fontSize: 13, flexShrink: 0 }}
         onClick={() => signOut()}
       >
-        {isMobile ? '✕' : 'EXIT'}
+        {isMobile ? '✕' : t('nav.exit')}
       </button>
     </div>
   )
