@@ -93,7 +93,7 @@ export default function Header({
         flexShrink: 0,
         marginRight: isMobile ? 8 : 0,
       }}>
-        <GlitchText text="GRID" />
+        <GlitchText text="DANNA" />
       </h1>
 
       {/* Separator — desktop only */}

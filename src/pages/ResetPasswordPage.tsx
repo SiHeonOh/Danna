@@ -85,7 +85,7 @@ export default function ResetPasswordPage() {
             className="font-display text-4xl mb-1"
             style={{ color: 'var(--color-primary)', textShadow: 'var(--glow-primary)' }}
           >
-            GRID
+            DANNA
           </h1>
           <p className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
             // PERSONAL COMMAND CENTER

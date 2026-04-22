@@ -16,8 +16,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       manifest: {
-        name: 'GRID',
-        short_name: 'GRID',
+        name: 'DANNA',
+        short_name: 'DANNA',
         description: 'Personal planner. Cyberpunk command center.',
         theme_color: '#0a0a0a',
         background_color: '#0a0a0a',
