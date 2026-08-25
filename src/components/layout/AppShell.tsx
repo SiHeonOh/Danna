@@ -7,7 +7,7 @@ export default function AppShell() {
   if (isLoading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
+        className="min-h-full flex items-center justify-center"
         style={{ background: 'var(--bg-base)' }}
       >
         <span className="font-mono text-sm" style={{ color: 'var(--color-text-muted)' }}>

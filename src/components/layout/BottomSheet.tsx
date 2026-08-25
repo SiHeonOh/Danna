@@ -26,8 +26,10 @@ export default function BottomSheet({ isOpen, onClose, children, title }: Bottom
           background: 'var(--bg-surface)',
           borderTop: '2px solid var(--color-primary)',
           boxShadow: '0 -4px 0 var(--color-primary)',
-          height: '55vh',
-          maxHeight: '80vh',
+          // vh scales with the #root zoom — multiply by the inverse so these
+          // stay relative to the real viewport
+          height: 'calc(55vh * var(--ui-scale-inv, 1))',
+          maxHeight: 'calc(80vh * var(--ui-scale-inv, 1))',
           display: 'flex',
           flexDirection: 'column',
         }}

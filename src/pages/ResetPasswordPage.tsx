@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
   return (
     <div
       className="flex justify-center p-4"
-      style={{ background: 'var(--bg-base)', position: 'fixed', inset: 0, overflowY: 'auto', alignItems: 'flex-start', paddingTop: 'max(24px, 10vh)' }}
+      style={{ background: 'var(--bg-base)', position: 'fixed', inset: 0, overflowY: 'auto', alignItems: 'flex-start', paddingTop: 'max(24px, calc(10vh * var(--ui-scale-inv, 1)))' }}
     >
       {/* Theme toggle */}
       <div style={{ position: 'absolute', top: 16, right: 16 }}>

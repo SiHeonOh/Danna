@@ -115,8 +115,11 @@ export default function PlannerPage() {
     setEditItemId(id)
   }, [])
 
+  // Root is height 100% (html/body/#root chain), NOT 100vh — vh units get
+  // multiplied by the #root zoom (--ui-scale), which would render the app
+  // taller than the viewport and cut off the bottom of the grid
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--bg-base)' }}>
       <Header
         viewMode={viewMode}
         currentDate={currentDate}

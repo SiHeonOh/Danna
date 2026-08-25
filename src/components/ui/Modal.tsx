@@ -40,7 +40,11 @@ export default function Modal({ isOpen, onClose, title, children, width = '480px
         style={{
           width: '100%',
           maxWidth: isMobile ? '100%' : width,
-          maxHeight: isMobile ? '95vh' : '90vh',
+          // vh scales with the #root zoom — multiply by the inverse so the
+          // cap stays relative to the real viewport
+          maxHeight: isMobile
+            ? 'calc(95vh * var(--ui-scale-inv, 1))'
+            : 'calc(90vh * var(--ui-scale-inv, 1))',
           background: 'var(--bg-surface)',
           border: '2px solid var(--color-border-bright)',
           boxShadow: 'var(--shadow-hard)',

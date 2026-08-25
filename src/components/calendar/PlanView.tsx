@@ -197,8 +197,10 @@ export default function PlanView({
       {/* ── Task list panel (left on desktop, top on mobile) ── */}
       <div style={{
         width: isMobile ? '100%' : 300,
-        height: isMobile ? '42vh' : undefined,
-        maxHeight: isMobile ? '42vh' : undefined,
+        // vh scales with the #root zoom — multiply by the inverse so these
+        // stay relative to the real viewport
+        height: isMobile ? 'calc(42vh * var(--ui-scale-inv, 1))' : undefined,
+        maxHeight: isMobile ? 'calc(42vh * var(--ui-scale-inv, 1))' : undefined,
         flexShrink: 0,
         borderRight: isMobile ? 'none' : '2px solid var(--color-border)',
         borderBottom: isMobile ? '2px solid var(--color-border)' : 'none',
