@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { addDays, subDays, addWeeks, subWeeks, addMonths, subMonths, format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import GlitchText from '@/components/ui/GlitchText'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useDateLocale } from '@/hooks/useDateLocale'
 
@@ -24,6 +26,10 @@ export default function Header({
   const isMobile = useIsMobile()
   const { t, i18n } = useTranslation()
   const dateLocale = useDateLocale()
+  const { theme, toggle: toggleTheme } = useTheme()
+  // Mobile: TAGS / language / theme / exit live behind a ⋮ menu — the full
+  // button row is ~450px wide and overflows a 375px phone header
+  const [menuOpen, setMenuOpen] = useState(false)
 
   function goBack() {
     if (viewMode === 'week') onDateChange(subWeeks(currentDate, 1))
@@ -185,32 +191,97 @@ export default function Header({
         {isMobile ? t('nav.addEventShort') : t('nav.addEvent')}
       </button>
 
-      <button
-        className="btn-ghost"
-        style={{ padding: isMobile ? '5px 8px' : '5px 12px', fontSize: 13, flexShrink: 0 }}
-        onClick={onTagManager}
-      >
-        {isMobile ? t('nav.tags').slice(0, 3) : t('nav.tags')}
-      </button>
+      {isMobile ? (
+        <>
+          {/* ⋮ overflow menu — TAGS / language / theme / exit */}
+          <button
+            className="btn-ghost"
+            style={{ padding: '5px 9px', fontSize: 14, fontWeight: 700, flexShrink: 0, lineHeight: 1.2 }}
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menu"
+          >
+            ⋮
+          </button>
+          {menuOpen && (
+            <>
+              {/* click-away backdrop */}
+              <div
+                onClick={() => setMenuOpen(false)}
+                style={{ position: 'fixed', inset: 0, zIndex: 150 }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 4,
+                  zIndex: 151,
+                  background: 'var(--bg-elevated)',
+                  border: '2px solid var(--color-border-bright)',
+                  boxShadow: 'var(--shadow-hard-dark)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  minWidth: 140,
+                }}
+              >
+                {[
+                  { label: t('nav.tags'), action: onTagManager },
+                  { label: isKorean ? 'ENGLISH' : '한국어', action: toggleLanguage },
+                  { label: theme === 'dark' ? '◑ LIGHT' : '◐ DARK', action: toggleTheme },
+                  { label: t('nav.exit'), action: () => signOut() },
+                ].map(({ label, action }, i) => (
+                  <button
+                    key={i}
+                    className="font-display"
+                    onClick={() => { setMenuOpen(false); action() }}
+                    style={{
+                      padding: '10px 14px',
+                      fontSize: 12,
+                      textAlign: 'left',
+                      background: 'transparent',
+                      color: 'var(--color-text)',
+                      border: 'none',
+                      borderBottom: i < 3 ? '1px solid var(--color-border)' : 'none',
+                      cursor: 'pointer',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <button
+            className="btn-ghost"
+            style={{ padding: '5px 12px', fontSize: 13, flexShrink: 0 }}
+            onClick={onTagManager}
+          >
+            {t('nav.tags')}
+          </button>
 
-      {/* EN / KR language toggle */}
-      <button
-        className="btn-ghost font-mono"
-        style={{ padding: isMobile ? '5px 6px' : '5px 10px', fontSize: 11, fontWeight: 700, flexShrink: 0 }}
-        onClick={toggleLanguage}
-      >
-        {isKorean ? 'EN' : 'KR'}
-      </button>
+          {/* EN / KR language toggle */}
+          <button
+            className="btn-ghost font-mono"
+            style={{ padding: '5px 10px', fontSize: 11, fontWeight: 700, flexShrink: 0 }}
+            onClick={toggleLanguage}
+          >
+            {isKorean ? 'EN' : 'KR'}
+          </button>
 
-      <ThemeToggle />
+          <ThemeToggle />
 
-      <button
-        className="btn-ghost"
-        style={{ padding: isMobile ? '5px 8px' : '5px 12px', fontSize: 13, flexShrink: 0 }}
-        onClick={() => signOut()}
-      >
-        {isMobile ? '✕' : t('nav.exit')}
-      </button>
+          <button
+            className="btn-ghost"
+            style={{ padding: '5px 12px', fontSize: 13, flexShrink: 0 }}
+            onClick={() => signOut()}
+          >
+            {t('nav.exit')}
+          </button>
+        </>
+      )}
     </div>
   )
 }

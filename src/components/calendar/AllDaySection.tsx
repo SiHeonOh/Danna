@@ -11,6 +11,8 @@ interface AllDaySectionProps {
   /** Strip-wide expanded state — owned by the view so all days toggle together */
   expanded?: boolean
   onToggleExpand?: () => void
+  /** Mobile week view: 44px columns — text-only rows, no checkbox/drag/add */
+  compact?: boolean
 }
 
 // Collapsed: at most this many rows per day, then a "+N ▾" expander —
@@ -104,6 +106,7 @@ export default function AllDaySection({
   onDueToggle,
   expanded = true,
   onToggleExpand,
+  compact = false,
 }: AllDaySectionProps) {
   const dayBlocks = blocks.filter((b) => b.date === date)
   // Completed tasks sink to the bottom (and behind the +N fold when collapsed)
@@ -135,7 +138,36 @@ export default function AllDaySection({
       }}
     >
       {visible.map(({ kind, block }) =>
-        kind === 'due' ? (
+        compact ? (
+          // 44px column: text-only row, tap to edit; complete/drag in Day view
+          <div
+            key={block.key}
+            onClick={() => onBlockClick(block)}
+            style={{
+              fontFamily: displayFont,
+              textTransform: 'uppercase',
+              fontSize: 8,
+              letterSpacing: '0.02em',
+              minHeight: 13,
+              padding: '1px 2px',
+              width: '100%',
+              minWidth: 0,
+              flexShrink: 0,
+              background: `${(block.tag?.color ?? 'var(--color-accent)')}${kind === 'due' ? '14' : '22'}`,
+              borderLeft: `2px ${kind === 'due' ? 'dashed' : 'solid'} ${block.tag?.color ?? 'var(--color-accent)'}`,
+              color: 'var(--color-text)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              opacity: block.is_completed ? 0.45 : 1,
+              textDecoration: block.is_completed ? 'line-through' : 'none',
+            }}
+            title={block.title}
+          >
+            {block.title}
+          </div>
+        ) : kind === 'due' ? (
           <DueTaskChip key={block.key} block={block} onClick={onBlockClick} onToggle={onDueToggle} />
         ) : (
           <div
@@ -176,7 +208,8 @@ export default function AllDaySection({
       )}
 
       {/* Footer pinned to the cell bottom — expander left, add-button right,
-          identical 18px-tall controls on one baseline across all days */}
+          identical 18px-tall controls on one baseline across all days.
+          Compact (44px columns): expander only — "+" wouldn't fit. */}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', width: '100%', marginTop: 'auto', paddingTop: 2 }}>
         {hiddenCount > 0 && (
           <button
@@ -189,13 +222,13 @@ export default function AllDaySection({
               padding: '0 2px',
               fontSize: 9,
               fontWeight: 700,
-              letterSpacing: '0.08em',
+              letterSpacing: compact ? 'normal' : '0.08em',
               color: 'var(--color-primary)',
               cursor: 'pointer',
             }}
             title="Show all"
           >
-            +{hiddenCount} ▾
+            +{hiddenCount}{compact ? '' : ' ▾'}
           </button>
         )}
         {collapsible && (
@@ -218,26 +251,28 @@ export default function AllDaySection({
             ▴
           </button>
         )}
-        <button
-          onClick={() => onAddClick(date)}
-          className="btn-ghost"
-          style={{
-            width: 18,
-            height: 18,
-            padding: 0,
-            fontSize: 12,
-            lineHeight: 1,
-            minWidth: 0,
-            flexShrink: 0,
-            marginLeft: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          title="Add all-day note"
-        >
-          +
-        </button>
+        {!compact && (
+          <button
+            onClick={() => onAddClick(date)}
+            className="btn-ghost"
+            style={{
+              width: 18,
+              height: 18,
+              padding: 0,
+              fontSize: 12,
+              lineHeight: 1,
+              minWidth: 0,
+              flexShrink: 0,
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title="Add all-day note"
+          >
+            +
+          </button>
+        )}
       </div>
     </div>
   )

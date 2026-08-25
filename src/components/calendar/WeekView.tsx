@@ -192,6 +192,7 @@ export default function WeekView({
               onDueToggle={onDueToggle}
               expanded={allDayExpanded}
               onToggleExpand={() => setAllDayExpanded((v) => !v)}
+              compact={isMobile}
             />
           </div>
         ))}
