@@ -105,6 +105,14 @@ html, body, #root {
   padding: 0;
 }
 
+/* Root UI scale — set by initUiScale() (src/lib/uiScale.ts) from viewport
+   width, so wide/dense screens render at a similar physical size to a
+   1280px laptop. zoom reflows (unlike transform), keeping scrollbars,
+   fixed positioning, and hit targets correct. */
+#root {
+  zoom: var(--ui-scale, 1);
+}
+
 body {
   background-color: var(--bg-base);
   color: var(--color-text);

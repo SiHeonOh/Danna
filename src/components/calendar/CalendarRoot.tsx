@@ -10,6 +10,7 @@ import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
 import { useDragState } from '@/hooks/useDragState'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { splitAtDate } from '@/lib/recurrence'
+import { getUiScale } from '@/lib/uiScale'
 import {
   snapMinutesTo15, timeStringToMinutes, minutesToTimeString,
   addMinutesToTime, durationMinutes, SLOT_HEIGHT_PX,
@@ -108,7 +109,9 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
       const blockKey = resizingBlock.key
       const block = blocks.find((b) => b.key === blockKey)
       if (block) {
-        const deltaMinutes = Math.round(delta.y / SLOT_HEIGHT_PX) * 15
+        // delta.y is in client px; the grid is zoomed by --ui-scale, so a
+        // slot renders as SLOT_HEIGHT_PX * scale client px
+        const deltaMinutes = Math.round(delta.y / (SLOT_HEIGHT_PX * getUiScale())) * 15
         const endMins = timeStringToMinutes(resizingBlock.startEndTime)
         const startMins = timeStringToMinutes(block.start_time)
         const newEndMins = snapMinutesTo15(Math.max(endMins + deltaMinutes, startMins + 15))
@@ -411,9 +414,13 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
           )
         })()}
 
-        <DragOverlay modifiers={[restrictToWindowEdges]}>
+        {/* dnd-kit positions the overlay wrapper in client px; counter-zoom it
+            to effective zoom 1 so it tracks the cursor 1:1 under --ui-scale,
+            then re-zoom the chip itself so it matches the surrounding UI */}
+        <DragOverlay modifiers={[restrictToWindowEdges]} style={{ zoom: 'var(--ui-scale-inv, 1)' }}>
           {dragState.activeId && !dragState.activeId.startsWith('resize::') && (
             <div style={{
+              zoom: 'var(--ui-scale, 1)',
               padding: '4px 8px',
               background: 'var(--bg-elevated)',
               border: '1px solid var(--color-primary)',

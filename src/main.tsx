@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './i18n' // must import before App so translations are ready
 import App from './App'
+import { initUiScale } from './lib/uiScale'
+
+// Set --ui-scale before first render so there's no visible size jump
+initUiScale()
 
 // Service worker auto-update logic:
 //
