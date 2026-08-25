@@ -78,7 +78,7 @@ export default function WeekView({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: `${labelCol}px repeat(7, 1fr)`,
+          gridTemplateColumns: `${labelCol}px repeat(7, minmax(0, 1fr))`,
           borderBottom: '2px solid var(--color-border)',
           flexShrink: 0,
           minWidth: minWeekWidth || undefined,
@@ -152,7 +152,7 @@ export default function WeekView({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: `${labelCol}px repeat(7, 1fr)`,
+          gridTemplateColumns: `${labelCol}px repeat(7, minmax(0, 1fr))`,
           borderBottom: '2px solid var(--color-border)',
           flexShrink: 0,
           minWidth: minWeekWidth || undefined,
@@ -182,7 +182,7 @@ export default function WeekView({
           </span>
         </div>
         {days.map((d) => (
-          <div key={d.toISOString()} style={{ borderRight: '2px solid var(--color-border)' }}>
+          <div key={d.toISOString()} style={{ borderRight: '2px solid var(--color-border)', minWidth: 0, overflow: 'hidden' }}>
             <AllDaySection
               date={format(d, 'yyyy-MM-dd')}
               blocks={allDayBlocks}
@@ -202,7 +202,7 @@ export default function WeekView({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: `${labelCol}px repeat(7, 1fr)`,
+            gridTemplateColumns: `${labelCol}px repeat(7, minmax(0, 1fr))`,
             height: 1440,
             position: 'relative',
             minWidth: minWeekWidth || undefined,

@@ -42,7 +42,7 @@ export default function MonthView({ date, onDayClick, onBlockDoubleClick }: Mont
       {/* Day-of-week header */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(7, 1fr)',
+        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
         borderBottom: '2px solid var(--color-border)',
         flexShrink: 0,
         background: 'var(--bg-elevated)',
@@ -68,7 +68,7 @@ export default function MonthView({ date, onDayClick, onBlockDoubleClick }: Mont
       {/* Day grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(7, 1fr)',
+        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
         gridTemplateRows: `repeat(${days.length / 7}, 1fr)`,
         flex: 1,
         overflow: 'hidden',
