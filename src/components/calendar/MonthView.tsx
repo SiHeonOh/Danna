@@ -11,7 +11,7 @@ interface MonthViewProps {
 }
 
 export default function MonthView({ date, onDayClick, onBlockDoubleClick }: MonthViewProps) {
-  const { items, tags, rules, overrides } = usePlanner()
+  const { items, tags, rules, overrides, toggleComplete } = usePlanner()
   const { t } = useTranslation()
   const DOW = t('calendar.dow', { returnObjects: true }) as string[]
 
@@ -142,14 +142,22 @@ export default function MonthView({ date, onDayClick, onBlockDoubleClick }: Mont
                 }} />
               )}
 
-              {/* TO DO tasks (no time) */}
+              {/* TO DO tasks (no time) — checkbox completes, row click edits */}
               {todos.slice(0, MAX_VISIBLE).map((item) => {
                 const tag = tags.find(t => t.id === item.tag_id)
                 const color = tag?.color ?? '#555555'
                 return (
                   <div
                     key={item.id}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onBlockDoubleClick({
+                        key: item.id, item, date: item.date ?? '', start_time: item.start_time ?? '',
+                        end_time: item.end_time ?? '', title: item.title, is_completed: item.is_completed,
+                        is_recurring: false, original_date: item.date ?? '', override_id: null,
+                        tag: tag ?? null,
+                      })
+                    }}
                     style={{
                       fontSize: 10,
                       padding: '1px 4px',
@@ -157,16 +165,34 @@ export default function MonthView({ date, onDayClick, onBlockDoubleClick }: Mont
                       borderLeft: `2px dashed ${color}`,
                       background: `${color}18`,
                       color: 'var(--color-text)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
                       fontFamily: "'JetBrains Mono', monospace",
                       opacity: item.is_completed ? 0.4 : 1,
-                      textDecoration: item.is_completed ? 'line-through' : 'none',
+                      cursor: 'pointer',
                     }}
                     title={item.title}
                   >
-                    {item.title}
+                    <input
+                      type="checkbox"
+                      className="cyber-checkbox checkbox-sm"
+                      checked={item.is_completed}
+                      onChange={() => toggleComplete(item.id, item.is_completed)}
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      style={{ borderColor: color }}
+                    />
+                    <span style={{
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      textDecoration: item.is_completed ? 'line-through' : 'none',
+                    }}>
+                      {item.title}
+                    </span>
                   </div>
                 )
               })}

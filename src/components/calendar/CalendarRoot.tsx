@@ -272,7 +272,10 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
       end_time: values.end_time || null,
       is_completed: values.is_completed,
       priority: (values.priority as 'low' | 'medium' | 'high') || null,
-      goal_period: null as null,
+      // Preserve goal status — the form doesn't expose goal_period, and
+      // writing null here silently kicked goals out of the sidebar's
+      // WEEK/MONTH tabs on every edit
+      goal_period: editingBlock?.item.goal_period ?? null,
     }
 
     const ruleData = values.has_recurrence

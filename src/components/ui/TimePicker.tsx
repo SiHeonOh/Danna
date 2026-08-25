@@ -84,6 +84,30 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
             overflowY: 'auto',
           }}
         >
+          {/* Clear — removes the time (a dated task without times becomes a
+              due chip in the all-day strip) */}
+          {value && (
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => { onChange(''); setOpen(false) }}
+              style={{
+                width: '100%',
+                padding: '4px 0',
+                fontSize: 10,
+                letterSpacing: '0.1em',
+                border: 'none',
+                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'none',
+                position: 'sticky',
+                top: 0,
+                background: 'var(--bg-elevated)',
+                zIndex: 1,
+              }}
+            >
+              CLEAR
+            </button>
+          )}
           {SLOTS.map((slot) => {
             const isSel  = slot === value
             const isHour = slot.endsWith(':00')
