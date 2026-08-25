@@ -33,7 +33,9 @@ export default function MonthView({ date, onDayClick, onBlockDoubleClick }: Mont
   // Unscheduled to-do tasks for each day (date set, no time)
   function todoForDay(d: Date) {
     const ds = format(d, 'yyyy-MM-dd')
-    return items.filter(i => i.type === 'task' && i.date === ds && !i.start_time)
+    return items
+      .filter(i => i.type === 'task' && i.date === ds && !i.start_time)
+      .sort((a, b) => Number(a.is_completed) - Number(b.is_completed))
   }
 
   return (

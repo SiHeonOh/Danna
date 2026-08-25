@@ -106,7 +106,10 @@ export default function AllDaySection({
   onToggleExpand,
 }: AllDaySectionProps) {
   const dayBlocks = blocks.filter((b) => b.date === date)
-  const dayDue = dueTasks.filter((b) => b.date === date)
+  // Completed tasks sink to the bottom (and behind the +N fold when collapsed)
+  const dayDue = dueTasks
+    .filter((b) => b.date === date)
+    .sort((a, b) => Number(a.is_completed) - Number(b.is_completed))
 
   const rows: { kind: 'note' | 'due'; block: CalendarBlock }[] = [
     ...dayBlocks.map((block) => ({ kind: 'note' as const, block })),
