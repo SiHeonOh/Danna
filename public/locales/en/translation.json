@@ -44,6 +44,7 @@
     "day": "DAY",
     "week": "WEEK",
     "month": "MONTH",
+    "flow": "FLOW",
     "plan": "PLAN",
     "tags": "TAGS",
     "addEvent": "+ EVENT",
@@ -55,7 +56,15 @@
   },
   "calendar": {
     "allDay": "ALL\nDAY",
-    "dow": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+    "dow": [
+      "MON",
+      "TUE",
+      "WED",
+      "THU",
+      "FRI",
+      "SAT",
+      "SUN"
+    ],
     "today": "TODAY"
   },
   "form": {
@@ -106,7 +115,20 @@
     "weeks": "week(s)",
     "months": "month(s)",
     "years": "year(s)",
-    "monthNames": ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+    "monthNames": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
     "ordinals": {
       "none": "None",
       "first": "First",
@@ -162,5 +184,8 @@
     "inbox": "INBOX",
     "noUnscheduledTasks": "No unscheduled tasks.",
     "completed": "COMPLETED"
+  },
+  "flow": {
+    "addTask": "+ TASK"
   }
 }

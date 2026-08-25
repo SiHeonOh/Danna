@@ -4,7 +4,7 @@ import {
   useSensor, useSensors, type DragEndEvent, type DragStartEvent, type DragMoveEvent,
 } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { startOfWeek, endOfWeek, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, parseISO, format } from 'date-fns'
+import { startOfWeek, endOfWeek, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, addDays as addDaysFns, parseISO, format } from 'date-fns'
 import { usePlanner } from '@/context/PlannerContext'
 import { useCalendarView, useAllDayItems, useDueTasks } from '@/hooks/useCalendarView'
 import { useDragState } from '@/hooks/useDragState'
@@ -19,11 +19,12 @@ import DayView from './DayView'
 import WeekView from './WeekView'
 import PlanView from './PlanView'
 import MonthView from './MonthView'
+import FlowView from './FlowView'
 import type { CalendarBlock, ItemFormValues, EditScope } from '@/types/app.types'
 import ItemFormModal from '@/components/forms/ItemFormModal'
 import EditScopeDialog from '@/components/forms/EditScopeDialog'
 
-type ViewMode = 'day' | 'week' | 'plan' | 'month'
+type ViewMode = 'day' | 'week' | 'plan' | 'month' | 'flow'
 
 interface CalendarRootProps {
   viewMode: ViewMode
@@ -63,6 +64,10 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
         from: startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }),
         to: endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 }),
       }
+    }
+    if (viewMode === 'flow') {
+      // FlowView renders currentDate −14 .. +60 days (see FlowView constants)
+      return { from: startOfDay(addDaysFns(currentDate, -14)), to: endOfDay(addDaysFns(currentDate, 60)) }
     }
     return {
       from: startOfWeek(currentDate, { weekStartsOn: 1 }),
@@ -144,6 +149,23 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
       const block = blocks.find((b) => b.key === activeId)
       if (!block || block.is_recurring) return
       await updateItem(block.item.id, { date: null, start_time: null, end_time: null })
+      return
+    }
+
+    // Flow view: task row dropped onto another day column → move the date,
+    // keep any scheduled times (recurring instances move via override)
+    if (overData.type === 'flowday') {
+      if (!activeId.startsWith('flow::')) return
+      const dragged = active.data.current as { block?: CalendarBlock } | undefined
+      const fb = dragged?.block
+      if (!fb) return
+      const newDate = (overData as { type: string; date: string }).date
+      if (newDate === fb.date) return
+      if (fb.is_recurring) {
+        await upsertOverride(fb.item.id, fb.original_date, { override_date: newDate })
+      } else {
+        await updateItem(fb.item.id, { date: newDate })
+      }
       return
     }
 
@@ -420,6 +442,19 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
                   onDayClick={(d) => onNavigate?.(d, isMobile ? 'day' : 'plan')}
                   onBlockDoubleClick={handleBlockDoubleClick}
                 />
+              ) : viewMode === 'flow' ? (
+                <FlowView
+                  date={currentDate}
+                  blocks={blocks}
+                  dueTasks={dueTasks}
+                  onRowClick={handleBlockDoubleClick}
+                  onToggle={handleCompleteInstance}
+                  onAddTask={(date) => {
+                    setEditingBlock(null)
+                    setFormDefaults({ date, type: 'task' })
+                    setFormOpen(true)
+                  }}
+                />
               ) : (
                 <WeekView
                   date={currentDate}
@@ -460,7 +495,10 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
                 ? items.find((i) => `unscheduled::${i.id}` === dragState.activeId)?.title ?? 'Moving...'
                 : dragState.activeId.startsWith('due::')
                   ? dueTasks.find((b) => `due::${b.key}` === dragState.activeId)?.title ?? 'Moving...'
-                  : blocks.find((b) => b.key === dragState.activeId)?.title ?? 'Moving...'
+                  : dragState.activeId.startsWith('flow::')
+                    ? (blocks.find((b) => `flow::${b.key}` === dragState.activeId)
+                        ?? dueTasks.find((b) => `flow::${b.key}` === dragState.activeId))?.title ?? 'Moving...'
+                    : blocks.find((b) => b.key === dragState.activeId)?.title ?? 'Moving...'
               }
             </div>
           )}

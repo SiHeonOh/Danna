@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useDateLocale } from '@/hooks/useDateLocale'
 
-type ViewMode = 'day' | 'week' | 'plan' | 'month'
+type ViewMode = 'day' | 'week' | 'plan' | 'month' | 'flow'
 
 interface HeaderProps {
   viewMode: ViewMode
@@ -32,12 +32,12 @@ export default function Header({
   const [menuOpen, setMenuOpen] = useState(false)
 
   function goBack() {
-    if (viewMode === 'week') onDateChange(subWeeks(currentDate, 1))
+    if (viewMode === 'week' || viewMode === 'flow') onDateChange(subWeeks(currentDate, 1))
     else if (viewMode === 'month') onDateChange(subMonths(currentDate, 1))
     else onDateChange(subDays(currentDate, 1))
   }
   function goForward() {
-    if (viewMode === 'week') onDateChange(addWeeks(currentDate, 1))
+    if (viewMode === 'week' || viewMode === 'flow') onDateChange(addWeeks(currentDate, 1))
     else if (viewMode === 'month') onDateChange(addMonths(currentDate, 1))
     else onDateChange(addDays(currentDate, 1))
   }
@@ -158,6 +158,7 @@ export default function Header({
             { id: 'day',   key: 'nav.day'   },
             { id: 'week',  key: 'nav.week'  },
             { id: 'month', key: 'nav.month' },
+            { id: 'flow',  key: 'nav.flow'  },
           ] as const).map(({ id, key }, idx) => {
             const active = viewMode === id
             return (

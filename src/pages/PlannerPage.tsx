@@ -12,7 +12,7 @@ import ViewFAB from '@/components/layout/ViewFAB'
 import { useIsOnline } from '@/hooks/useIsOnline'
 import type { ItemFormValues } from '@/types/app.types'
 
-type ViewMode = 'day' | 'week' | 'plan' | 'month'
+type ViewMode = 'day' | 'week' | 'plan' | 'month' | 'flow'
 
 export default function PlannerPage() {
   const {

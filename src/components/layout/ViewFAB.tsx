@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-type ViewMode = 'day' | 'week' | 'month'
+type ViewMode = 'day' | 'week' | 'month' | 'flow'
 
 interface ViewFABProps {
   viewMode: ViewMode
@@ -8,6 +8,7 @@ interface ViewFABProps {
 }
 
 const OPTIONS: { id: ViewMode; label: string }[] = [
+  { id: 'flow',  label: 'FLOW'  },
   { id: 'month', label: 'MONTH' },
   { id: 'week',  label: 'WEEK'  },
   { id: 'day',   label: 'DAY'   },
@@ -21,7 +22,7 @@ export default function ViewFAB({ viewMode, onViewModeChange }: ViewFABProps) {
     setOpen(false)
   }
 
-  const currentLabel = viewMode === 'day' ? 'DAY' : viewMode === 'week' ? 'WEEK' : 'MONTH'
+  const currentLabel = viewMode === 'day' ? 'DAY' : viewMode === 'week' ? 'WEEK' : viewMode === 'flow' ? 'FLOW' : 'MONTH'
 
   return (
     <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 110, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
