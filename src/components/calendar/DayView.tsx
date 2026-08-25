@@ -3,18 +3,20 @@ import { useDateLocale } from '@/hooks/useDateLocale'
 import type { CalendarBlock } from '@/types/app.types'
 import TimeGrid from './TimeGrid'
 import AllDaySection from './AllDaySection'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 interface DayViewProps {
   date: Date
   blocks: CalendarBlock[]
   allDayBlocks: CalendarBlock[]
+  dueTasks: CalendarBlock[]
   activeDragId: string | null
   onSlotClick: (date: string, time: string) => void
   onBlockDoubleClick: (block: CalendarBlock) => void
   onCompleteInstance: (block: CalendarBlock) => void
   onAllDayClick: (block: CalendarBlock) => void
   onAllDayAdd: (date: string) => void
+  onDueToggle: (block: CalendarBlock) => void
   planContent?: ReactNode
 }
 
@@ -22,15 +24,18 @@ export default function DayView({
   date,
   blocks,
   allDayBlocks,
+  dueTasks,
   activeDragId,
   onSlotClick,
   onBlockDoubleClick,
   onCompleteInstance,
   onAllDayClick,
   onAllDayAdd,
+  onDueToggle,
   planContent,
 }: DayViewProps) {
   const dateStr = format(date, 'yyyy-MM-dd')
+  const [allDayExpanded, setAllDayExpanded] = useState(false)
   const dayBlocks = blocks.filter((b) => b.date === dateStr)
   const today = isToday(date)
   const dateLocale = useDateLocale()
@@ -115,13 +120,17 @@ export default function DayView({
         </div>
       </div>
 
-      {/* All-day section */}
-      <div style={{ flexShrink: 0 }}>
+      {/* All-day section — owns the bottom border (AllDaySection has none) */}
+      <div style={{ flexShrink: 0, borderBottom: '2px solid var(--color-border)' }}>
         <AllDaySection
           date={dateStr}
           blocks={allDayBlocks}
+          dueTasks={dueTasks}
           onBlockClick={onAllDayClick}
           onAddClick={onAllDayAdd}
+          onDueToggle={onDueToggle}
+          expanded={allDayExpanded}
+          onToggleExpand={() => setAllDayExpanded((v) => !v)}
         />
       </div>
 

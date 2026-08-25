@@ -439,6 +439,18 @@ label {
   transform: rotate(45deg);
 }
 
+/* Compact variant for tight rows (due chips in the all-day strip) */
+.cyber-checkbox.checkbox-sm {
+  width: 12px;
+  height: 12px;
+}
+.cyber-checkbox.checkbox-sm:checked::after {
+  top: 0;
+  left: 3px;
+  width: 3px;
+  height: 6px;
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────── */
 
 .hidden-mobile { display: flex; }

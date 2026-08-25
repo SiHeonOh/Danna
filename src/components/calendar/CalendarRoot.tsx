@@ -6,7 +6,7 @@ import {
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { startOfWeek, endOfWeek, startOfDay, endOfDay, startOfMonth, endOfMonth, subDays, parseISO, format } from 'date-fns'
 import { usePlanner } from '@/context/PlannerContext'
-import { useCalendarView, useAllDayItems } from '@/hooks/useCalendarView'
+import { useCalendarView, useAllDayItems, useDueTasks } from '@/hooks/useCalendarView'
 import { useDragState } from '@/hooks/useDragState'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { splitAtDate } from '@/lib/recurrence'
@@ -72,6 +72,7 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
 
   const blocks = useCalendarView({ items, rules, overrides, tags, from, to })
   const allDayBlocks = useAllDayItems(items, rules, overrides, tags, from, to)
+  const dueTasks = useDueTasks(items, rules, overrides, tags, from, to)
 
   // dnd-kit sensors — long press (200ms) activates on touch for mobile
   const sensors = useSensors(
@@ -155,6 +156,24 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
       if (!item) return
       const endTime = addMinutesToTime(newTime, 60)
       await updateItem(itemId, { date: newDate, start_time: newTime, end_time: endTime })
+      return
+    }
+
+    // Due chip (dated task without time) dragged onto the grid → schedule it
+    if (activeId.startsWith('due::')) {
+      const dragged = active.data.current as { block?: CalendarBlock } | undefined
+      const dueBlock = dragged?.block
+      if (!dueBlock) return
+      const endTime = addMinutesToTime(newTime, 60)
+      if (dueBlock.is_recurring) {
+        await upsertOverride(dueBlock.item.id, dueBlock.original_date, {
+          override_date: newDate,
+          override_start_time: newTime,
+          override_end_time: endTime,
+        })
+      } else {
+        await updateItem(dueBlock.item.id, { date: newDate, start_time: newTime, end_time: endTime })
+      }
       return
     }
 
@@ -382,12 +401,14 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
                   date={currentDate}
                   blocks={blocks}
                   allDayBlocks={allDayBlocks}
+                  dueTasks={dueTasks}
                   activeDragId={dragState.activeId}
                   onSlotClick={handleSlotClick}
                   onBlockDoubleClick={handleBlockDoubleClick}
                   onCompleteInstance={handleCompleteInstance}
                   onAllDayClick={handleBlockDoubleClick}
                   onAllDayAdd={handleAllDayAdd}
+                  onDueToggle={handleCompleteInstance}
                   planContent={planContent}
                 />
               ) : viewMode === 'month' ? (
@@ -401,12 +422,14 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
                   date={currentDate}
                   blocks={blocks}
                   allDayBlocks={allDayBlocks}
+                  dueTasks={dueTasks}
                   activeDragId={dragState.activeId}
                   onSlotClick={handleSlotClick}
                   onBlockDoubleClick={handleBlockDoubleClick}
                   onCompleteInstance={handleCompleteInstance}
                   onAllDayClick={handleBlockDoubleClick}
                   onAllDayAdd={handleAllDayAdd}
+                  onDueToggle={handleCompleteInstance}
                   planContent={planContent}
                 />
               )}
@@ -432,7 +455,9 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
             }}>
               {dragState.activeId.startsWith('unscheduled::')
                 ? items.find((i) => `unscheduled::${i.id}` === dragState.activeId)?.title ?? 'Moving...'
-                : blocks.find((b) => b.key === dragState.activeId)?.title ?? 'Moving...'
+                : dragState.activeId.startsWith('due::')
+                  ? dueTasks.find((b) => `due::${b.key}` === dragState.activeId)?.title ?? 'Moving...'
+                  : blocks.find((b) => b.key === dragState.activeId)?.title ?? 'Moving...'
               }
             </div>
           )}

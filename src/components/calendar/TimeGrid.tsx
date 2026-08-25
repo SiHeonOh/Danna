@@ -40,7 +40,8 @@ export default function TimeGrid({
           background: 'var(--bg-surface)',
         }}
       >
-        {HOUR_LABELS.map((label, i) => (
+        {/* Skip 12AM — clipped at the container's top edge (see WeekView) */}
+        {HOUR_LABELS.map((label, i) => i === 0 ? null : (
           <div
             key={i}
             style={{

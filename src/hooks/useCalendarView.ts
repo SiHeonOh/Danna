@@ -134,3 +134,70 @@ export function useAllDayItems(
     return blocks
   }, [items, rules, overrides, tags, from, to])
 }
+
+// Tasks with a date (deadline) but no time — the grid can't place them, so
+// Week/Day views surface them as "due" chips in the all-day strip.
+export function useDueTasks(
+  items: Item[],
+  rules: RecurrenceRule[],
+  overrides: InstanceOverride[],
+  tags: Tag[],
+  from: Date,
+  to: Date,
+): CalendarBlock[] {
+  return useMemo(() => {
+    const blocks: CalendarBlock[] = []
+    const fromStr = format(from, 'yyyy-MM-dd')
+    const toStr = format(to, 'yyyy-MM-dd')
+    const tagMap = new Map(tags.map((t) => [t.id, t]))
+
+    for (const item of items) {
+      if (item.type !== 'task') continue
+      const rule = rules.find((r) => r.item_id === item.id)
+
+      if (!rule) {
+        if (!item.date || item.date < fromStr || item.date > toStr) continue
+        if (item.start_time && item.end_time) continue // lives on the grid
+        blocks.push({
+          key: item.id,
+          item,
+          date: item.date,
+          start_time: '00:00',
+          end_time: '00:00',
+          title: item.title,
+          is_completed: item.is_completed,
+          is_recurring: false,
+          original_date: item.date,
+          override_id: null,
+          tag: item.tag_id ? (tagMap.get(item.tag_id) ?? null) : null,
+        })
+      } else {
+        const dates = expandInstances(item, rule, from, to)
+        for (const d of dates) {
+          const dateStr = utcDateStr(d)
+          const override = getOverride(item.id, dateStr, overrides)
+          if (override?.is_skipped) continue
+          // If the instance has effective times it's already on the grid
+          const start = override?.override_start_time ?? item.start_time
+          const end = override?.override_end_time ?? item.end_time
+          if (start && end) continue
+          blocks.push({
+            key: `${item.id}::${dateStr}`,
+            item,
+            date: override?.override_date ?? dateStr,
+            start_time: '00:00',
+            end_time: '00:00',
+            title: override?.override_title ?? item.title,
+            is_completed: override?.is_completed ?? item.is_completed,
+            is_recurring: true,
+            original_date: dateStr,
+            override_id: override?.id ?? null,
+            tag: item.tag_id ? (tagMap.get(item.tag_id) ?? null) : null,
+          })
+        }
+      }
+    }
+
+    return blocks
+  }, [items, rules, overrides, tags, from, to])
+}

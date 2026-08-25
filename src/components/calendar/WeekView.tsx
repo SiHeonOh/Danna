@@ -8,18 +8,20 @@ import CalendarBlock from './CalendarBlock'
 import CurrentTimeLine from './CurrentTimeLine'
 import AllDaySection from './AllDaySection'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 interface WeekViewProps {
   date: Date
   blocks: CalendarBlockType[]
   allDayBlocks: CalendarBlockType[]
+  dueTasks: CalendarBlockType[]
   activeDragId: string | null
   onSlotClick: (date: string, time: string) => void
   onBlockDoubleClick: (block: CalendarBlockType) => void
   onCompleteInstance: (block: CalendarBlockType) => void
   onAllDayClick: (block: CalendarBlockType) => void
   onAllDayAdd: (date: string) => void
+  onDueToggle: (block: CalendarBlockType) => void
   planContent?: ReactNode
 }
 
@@ -31,16 +33,38 @@ export default function WeekView({
   date,
   blocks,
   allDayBlocks,
+  dueTasks,
   activeDragId,
   onSlotClick,
   onBlockDoubleClick,
   onCompleteInstance,
   onAllDayClick,
   onAllDayAdd,
+  onDueToggle,
   planContent,
 }: WeekViewProps) {
   const days = weekDays(date)
   const isMobile = useIsMobile()
+  // All-day strip expand/collapse — one state for all 7 days (Google Calendar pattern)
+  const [allDayExpanded, setAllDayExpanded] = useState(false)
+
+  // The grid's vertical scrollbar lives inside the scroll container, so its
+  // 7 columns are computed on a narrower width than the header/all-day rows.
+  // Measure the scrollbar and pad those rows so all column lines align.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [scrollbarW, setScrollbarW] = useState(0)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) {
+      setScrollbarW(0)
+      return
+    }
+    const measure = () => setScrollbarW(el.offsetWidth - el.clientWidth)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [planContent])
   const { t } = useTranslation()
   const dateLocale = useDateLocale()
   const labelCol = isMobile ? 28 : 56
@@ -58,6 +82,7 @@ export default function WeekView({
           borderBottom: '2px solid var(--color-border)',
           flexShrink: 0,
           minWidth: minWeekWidth || undefined,
+          paddingRight: scrollbarW,
         }}
       >
         <div style={{ borderRight: '2px solid var(--color-border)' }} />
@@ -131,6 +156,7 @@ export default function WeekView({
           borderBottom: '2px solid var(--color-border)',
           flexShrink: 0,
           minWidth: minWeekWidth || undefined,
+          paddingRight: scrollbarW,
         }}
       >
         <div
@@ -160,15 +186,19 @@ export default function WeekView({
             <AllDaySection
               date={format(d, 'yyyy-MM-dd')}
               blocks={allDayBlocks}
+              dueTasks={dueTasks}
               onBlockClick={onAllDayClick}
               onAddClick={onAllDayAdd}
+              onDueToggle={onDueToggle}
+              expanded={allDayExpanded}
+              onToggleExpand={() => setAllDayExpanded((v) => !v)}
             />
           </div>
         ))}
       </div>
 
       {/* Scrollable grid — replaced by plan panel when open on mobile */}
-      {planContent ?? <div style={{ flex: 1, overflowY: 'auto', minWidth: minWeekWidth || undefined }}>
+      {planContent ?? <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', minWidth: minWeekWidth || undefined }}>
         <div
           style={{
             display: 'grid',
@@ -180,7 +210,9 @@ export default function WeekView({
         >
           {/* Hour labels */}
           <div style={{ position: 'relative', borderRight: '2px solid var(--color-border)' }}>
-            {HOUR_LABELS.map((label, i) => (
+            {/* Skip 12AM — it sits at the container's top edge and gets
+                clipped under the all-day strip (Google Calendar does the same) */}
+            {HOUR_LABELS.map((label, i) => i === 0 ? null : (
               <div
                 key={i}
                 className="font-mono"
