@@ -19,6 +19,7 @@ export interface Item {
   type: ItemType
   title: string
   description: string | null
+  location: string | null
   tag_id: string | null
   date: string | null
   start_time: string | null
@@ -74,6 +75,7 @@ export interface ItemFormValues {
   type: ItemType
   title: string
   description: string
+  location: string
   tag_id: string
   date: string
   start_time: string

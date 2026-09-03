@@ -294,10 +294,24 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
       end_time: values.end_time || null,
       is_completed: values.is_completed,
       priority: (values.priority as 'low' | 'medium' | 'high') || null,
+      location: values.location?.trim() || null,
       // Preserve goal status — the form doesn't expose goal_period, and
       // writing null here silently kicked goals out of the sidebar's
       // WEEK/MONTH tabs on every edit
       goal_period: editingBlock?.item.goal_period ?? null,
+    }
+
+    // The form was initialized from the INSTANCE (see editingItem). When the
+    // save applies to the whole series ("all"/"future"), fields the user
+    // didn't touch must fall back to the SERIES values — otherwise one
+    // resized occurrence's times (or its date) would be stamped onto every
+    // occurrence. Only fields actually changed in the form carry through.
+    if (editingBlock?.is_recurring && scope !== 'this' && editingItem) {
+      const base = editingBlock.item
+      if (values.title === editingItem.title) itemData.title = base.title
+      if ((values.date || null) === editingItem.date) itemData.date = base.date
+      if ((values.start_time || null) === editingItem.start_time) itemData.start_time = base.start_time
+      if ((values.end_time || null) === editingItem.end_time) itemData.end_time = base.end_time
     }
 
     const ruleData = values.has_recurrence
@@ -359,7 +373,24 @@ export default function CalendarRoot({ viewMode, currentDate, onNavigate, mobile
     setEditingBlock(null)
   }
 
-  const editingItem = editingBlock ? editingBlock.item : null
+  // What the form edits. For a recurring instance, show the INSTANCE's
+  // effective values (override-applied title/date/times), not the series
+  // base — otherwise a resized/moved occurrence opens showing stale times,
+  // and saving "this" writes those stale values back, undoing the change.
+  // '00:00'–'00:00' is the synthetic "no time" marker on due/all-day blocks.
+  const editingItem = useMemo(() => {
+    if (!editingBlock) return null
+    if (!editingBlock.is_recurring) return editingBlock.item
+    const untimed = editingBlock.start_time === '00:00' && editingBlock.end_time === '00:00'
+    return {
+      ...editingBlock.item,
+      title: editingBlock.title,
+      date: editingBlock.date,
+      start_time: untimed ? editingBlock.item.start_time : editingBlock.start_time,
+      end_time: untimed ? editingBlock.item.end_time : editingBlock.end_time,
+      is_completed: editingBlock.is_completed,
+    }
+  }, [editingBlock])
   const editingRule = editingItem ? ruleForItem(editingItem.id) : null
 
   return (

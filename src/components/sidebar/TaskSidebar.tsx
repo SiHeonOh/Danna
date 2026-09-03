@@ -134,6 +134,7 @@ function GoalTab({
       end_time: null,
       is_completed: false,
       priority: null,
+      location: null,
       goal_period: period,
     })
     setNewTitle('')

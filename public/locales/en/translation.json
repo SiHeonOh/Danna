@@ -95,7 +95,10 @@
     "noTag": "No tag",
     "create": "CREATE",
     "addRecurrence": "+ ADD RECURRENCE",
-    "removeRecurrence": "− REMOVE RECURRENCE"
+    "removeRecurrence": "− REMOVE RECURRENCE",
+    "location": "Location",
+    "locationPlaceholder": "Building / room / address",
+    "openInMaps": "MAPS ↗"
   },
   "recurrence": {
     "frequency": "Frequency",

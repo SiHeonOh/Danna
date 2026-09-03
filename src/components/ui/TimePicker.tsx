@@ -12,11 +12,19 @@ const SLOTS = Array.from({ length: 96 }, (_, i) => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 })
 
-function fmt12(time: string): string {
+function split12(time: string): { clock: string; period: 'AM' | 'PM' } {
   const [h, m] = time.split(':').map(Number)
-  const period = h < 12 ? 'AM' : 'PM'
-  const h12 = h % 12 || 12
-  return `${h12}:${String(m).padStart(2, '0')} ${period}`
+  return { clock: `${h % 12 || 12}:${String(m).padStart(2, '0')}`, period: h < 12 ? 'AM' : 'PM' }
+}
+
+function fmt12(time: string): string {
+  const { clock, period } = split12(time)
+  return `${clock} ${period}`
+}
+
+// DB values arrive as HH:MM:SS; slots are HH:MM — compare on the same shape
+function norm(time: string): string {
+  return time.length > 5 ? time.slice(0, 5) : time
 }
 
 export default function TimePicker({ value, onChange }: TimePickerProps) {
@@ -82,6 +90,10 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
             boxShadow: 'var(--shadow-hard-dark)',
             maxHeight: 196,
             overflowY: 'auto',
+            // Positioned so slot.offsetTop is measured against THIS list —
+            // otherwise the scroll-to-selected math is offset by the list's
+            // position inside the modal and the current time lands off-screen
+            position: 'relative',
           }}
         >
           {/* Clear — removes the time (a dated task without times becomes a
@@ -109,7 +121,7 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
             </button>
           )}
           {SLOTS.map((slot) => {
-            const isSel  = slot === value
+            const isSel  = !!value && slot === norm(value)
             const isHour = slot.endsWith(':00')
 
             return (
@@ -138,7 +150,18 @@ export default function TimePicker({ value, onChange }: TimePickerProps) {
                   transition: 'background 0.06s',
                 }}
               >
-                {fmt12(slot)}
+                {/* Period rendered as its own bold, colored token so 5:30 AM
+                    and 5:30 PM can't be confused while scrolling on a phone */}
+                {split12(slot).clock}
+                <span style={{
+                  marginLeft: 5,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  color: isSel ? '#ffffff' : split12(slot).period === 'PM' ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                }}>
+                  {split12(slot).period}
+                </span>
               </button>
             )
           })}

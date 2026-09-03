@@ -2,6 +2,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { useRef } from 'react'
 import { formatDisplayTime, topFromTime, heightFromTimes } from '@/lib/dateUtils'
+import { mapsUrl } from '@/lib/maps'
 import type { CalendarBlock as CalendarBlockType } from '@/types/app.types'
 import BlockResizeHandle from './BlockResizeHandle'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -141,6 +142,52 @@ export default function CalendarBlock({
               style={{ fontSize: 9, color: timeColor, marginTop: 1, fontWeight: 500 }}
             >
               {formatDisplayTime(block.start_time)}–{formatDisplayTime(block.end_time)}
+            </div>
+          )}
+          {/* Location — tap opens Google Maps (stopPropagation keeps it from
+              starting a drag or opening the editor) */}
+          {height >= 45 && block.item.location && (
+            <a
+              href={mapsUrl(block.item.location)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
+              className="font-mono"
+              style={{
+                display: 'block',
+                fontSize: 9,
+                color: timeColor,
+                marginTop: 2,
+                textDecoration: 'underline dotted',
+                textUnderlineOffset: 2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+              title={`Open in Google Maps: ${block.item.location}`}
+            >
+              ⌖ {block.item.location}
+            </a>
+          )}
+          {/* Description — only when the block is tall enough (≥ 1h) to hold
+              a line beyond title + time; clamps to whatever space remains */}
+          {height >= 60 && block.item.description && (
+            <div
+              style={{
+                fontSize: 10,
+                color: timeColor,
+                marginTop: 3,
+                lineHeight: 1.3,
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: Math.max(1, Math.floor((height - (block.item.location ? 54 : 40)) / 13)),
+                wordBreak: 'break-word',
+              }}
+            >
+              {block.item.description}
             </div>
           )}
         </div>

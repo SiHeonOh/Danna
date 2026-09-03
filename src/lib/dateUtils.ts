@@ -29,6 +29,13 @@ export function snapMinutesTo15(minutes: number): number {
   return Math.round(minutes / 15) * 15
 }
 
+// Postgres `time` columns come back as "HH:MM:SS"; the app (TimePicker slots,
+// equality checks) works in "HH:MM". Normalize at the data boundary.
+export function normalizeTime(time: string | null | undefined): string | null {
+  if (!time) return null
+  return time.length > 5 ? time.slice(0, 5) : time
+}
+
 export function timeStringToMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number)
   return h * 60 + m

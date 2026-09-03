@@ -4,6 +4,7 @@ import { addDays, format, isToday } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 import { useDateLocale } from '@/hooks/useDateLocale'
 import { formatDisplayTime } from '@/lib/dateUtils'
+import { mapsUrl } from '@/lib/maps'
 import type { CalendarBlock } from '@/types/app.types'
 
 // FLOW — a horizontally-scrolling task river: dates along the top X axis,
@@ -83,6 +84,35 @@ function TaskRow({ block, scheduled, onRowClick, onToggle }: {
         >
           {block.title}
         </div>
+        {block.item.location && (
+          <a
+            href={mapsUrl(block.item.location)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="font-mono"
+            style={{ display: 'block', fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2, textDecoration: 'underline dotted', textUnderlineOffset: 2 }}
+            title={`Open in Google Maps: ${block.item.location}`}
+          >
+            ⌖ {block.item.location}
+          </a>
+        )}
+        {block.item.description && (
+          <div style={{
+            fontSize: 10,
+            color: 'var(--color-text-muted)',
+            marginTop: 2,
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitBoxOrient: 'vertical',
+            WebkitLineClamp: 3,
+            wordBreak: 'break-word',
+          }}>
+            {block.item.description}
+          </div>
+        )}
         <div className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 1, display: 'flex', gap: 6 }}>
           {scheduled ? (
             <span>{formatDisplayTime(block.start_time)}</span>

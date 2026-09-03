@@ -95,7 +95,10 @@
     "noTag": "태그 없음",
     "create": "만들기",
     "addRecurrence": "+ 반복 추가",
-    "removeRecurrence": "− 반복 제거"
+    "removeRecurrence": "− 반복 제거",
+    "location": "장소",
+    "locationPlaceholder": "건물 / 강의실 / 주소",
+    "openInMaps": "지도 ↗"
   },
   "recurrence": {
     "frequency": "반복 주기",

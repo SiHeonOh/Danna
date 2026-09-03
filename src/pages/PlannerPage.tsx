@@ -53,6 +53,7 @@ export default function PlannerPage() {
       end_time: values.end_time || null,
       is_completed: values.is_completed,
       priority: (values.priority as 'low' | 'medium' | 'high') || null,
+      location: values.location?.trim() || null,
       goal_period: null as null,
     }
     const { data: newItem } = await createItem(itemData)
@@ -83,6 +84,7 @@ export default function PlannerPage() {
       end_time: values.end_time || null,
       is_completed: values.is_completed,
       priority: (values.priority as 'low' | 'medium' | 'high') || null,
+      location: values.location?.trim() || null,
       goal_period: editItem.goal_period, // preserve goal assignment
     })
     const ruleData = values.has_recurrence

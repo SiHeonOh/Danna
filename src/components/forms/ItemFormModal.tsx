@@ -6,7 +6,11 @@ import DatePicker from '@/components/ui/DatePicker'
 import TimePicker from '@/components/ui/TimePicker'
 import RecurrenceFields from './RecurrenceFields'
 import TagSelector from './TagSelector'
+import { timeStringToMinutes, minutesToTimeString } from '@/lib/dateUtils'
+import { mapsUrl, openInMaps } from '@/lib/maps'
 import type { Item, ItemFormValues, RecurrenceRule, Tag } from '@/types/app.types'
+
+const LAST_SLOT = 23 * 60 + 45
 
 interface ItemFormModalProps {
   isOpen: boolean
@@ -46,7 +50,7 @@ export default function ItemFormModal({
       type: defaultType, title: '', description: '', tag_id: '',
       date: defaultDate ?? '', start_time: defaultTime ?? '',
       end_time: defaultTime ? addHourToTime(defaultTime) : '',
-      priority: '', is_completed: false, has_recurrence: false,
+      priority: '', location: '', is_completed: false, has_recurrence: false,
       recurrence: defaultRecurrence,
     },
   })
@@ -59,6 +63,7 @@ export default function ItemFormModal({
         description: editItem.description ?? '', tag_id: editItem.tag_id ?? '',
         date: editItem.date ?? '', start_time: editItem.start_time ?? '',
         end_time: editItem.end_time ?? '', priority: editItem.priority ?? '',
+        location: editItem.location ?? '',
         is_completed: editItem.is_completed, has_recurrence: !!editRule,
         recurrence: editRule ? {
           frequency: editRule.frequency, interval: editRule.interval,
@@ -73,7 +78,7 @@ export default function ItemFormModal({
         type: defaultType, title: '', description: '', tag_id: '',
         date: defaultDate ?? '', start_time: defaultTime ?? '',
         end_time: defaultTime ? addHourToTime(defaultTime) : '',
-        priority: '', is_completed: false, has_recurrence: false,
+        priority: '', location: '', is_completed: false, has_recurrence: false,
         recurrence: defaultRecurrence,
       })
     }
@@ -86,6 +91,7 @@ export default function ItemFormModal({
   const dateVal = watch('date')
   const startVal = watch('start_time')
   const endVal = watch('end_time')
+  const locationVal = watch('location')
 
   const typeLabels: Record<string, string> = {
     task: t('form.task'),
@@ -137,11 +143,31 @@ export default function ItemFormModal({
             </div>
             <div>
               <label>{t('form.startShort')}</label>
-              <TimePicker value={startVal} onChange={(v) => setValue('start_time', v)} />
+              <TimePicker value={startVal} onChange={(v) => {
+                // Keep start/end linked: moving the start carries the end
+                // with it (preserving duration) so end can never trail start
+                setValue('start_time', v)
+                if (!v) return
+                const s = timeStringToMinutes(v)
+                const dur = startVal && endVal ? timeStringToMinutes(endVal) - timeStringToMinutes(startVal) : 0
+                if (!endVal || timeStringToMinutes(endVal) <= s) {
+                  setValue('end_time', minutesToTimeString(Math.min(s + (dur > 0 ? dur : 60), LAST_SLOT)))
+                }
+              }} />
             </div>
             <div>
               <label>{t('form.endShort')}</label>
-              <TimePicker value={endVal} onChange={(v) => setValue('end_time', v)} />
+              <TimePicker value={endVal} onChange={(v) => {
+                if (!v || !startVal) { setValue('end_time', v); return }
+                const s = timeStringToMinutes(startVal)
+                let e = timeStringToMinutes(v)
+                // An end at/before the start is never intended. The common
+                // cause is an AM/PM slip in the picker (5:30 AM for 5:30 PM) —
+                // if +12h makes it valid, assume that; otherwise clamp to +15m.
+                if (e <= s && e + 720 > s && e + 720 <= LAST_SLOT) e += 720
+                if (e <= s) e = Math.min(s + 15, LAST_SLOT)
+                setValue('end_time', minutesToTimeString(e))
+              }} />
             </div>
           </div>
         )}
@@ -162,6 +188,23 @@ export default function ItemFormModal({
             </select>
           </div>
         )}
+        <div>
+          <label>{t('form.location')}</label>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input type="text" placeholder={t('form.locationPlaceholder')} {...register('location')} style={{ flex: 1 }} />
+            {locationVal?.trim() && (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => openInMaps(locationVal)}
+                style={{ padding: '5px 10px', fontSize: 11, flexShrink: 0, whiteSpace: 'nowrap' }}
+                title={mapsUrl(locationVal)}
+              >
+                {t('form.openInMaps')}
+              </button>
+            )}
+          </div>
+        </div>
         <div>
           <label>{t('form.description')}</label>
           <textarea rows={2} placeholder={t('form.descriptionPlaceholder')} {...register('description')} />
