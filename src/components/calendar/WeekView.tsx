@@ -23,6 +23,8 @@ interface WeekViewProps {
   onAllDayAdd: (date: string) => void
   onDueToggle: (block: CalendarBlockType) => void
   planContent?: ReactNode
+  /** Shared/public view: no drag, no resize, no checkboxes, no add buttons */
+  readOnly?: boolean
 }
 
 const HOUR_LABELS = Array.from({ length: 24 }, (_, i) =>
@@ -42,6 +44,7 @@ export default function WeekView({
   onAllDayAdd,
   onDueToggle,
   planContent,
+  readOnly = false,
 }: WeekViewProps) {
   const days = weekDays(date)
   const isMobile = useIsMobile()
@@ -193,6 +196,7 @@ export default function WeekView({
               expanded={allDayExpanded}
               onToggleExpand={() => setAllDayExpanded((v) => !v)}
               compact={isMobile}
+              readOnly={readOnly}
             />
           </div>
         ))}
@@ -255,6 +259,7 @@ export default function WeekView({
                     isDragging={activeDragId === block.key}
                     onDoubleClick={onBlockDoubleClick}
                     onCompleteInstance={onCompleteInstance}
+                    readOnly={readOnly}
                   />
                 ))}
                 {isToday(d) && <CurrentTimeLine />}

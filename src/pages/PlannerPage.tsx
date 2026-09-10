@@ -7,6 +7,7 @@ import TaskSidebar from '@/components/sidebar/TaskSidebar'
 import CalendarRoot from '@/components/calendar/CalendarRoot'
 import ItemFormModal from '@/components/forms/ItemFormModal'
 import TagManagerModal from '@/components/forms/TagManagerModal'
+import ShareModal from '@/components/forms/ShareModal'
 import BottomSheet from '@/components/layout/BottomSheet'
 import ViewFAB from '@/components/layout/ViewFAB'
 import { useIsOnline } from '@/hooks/useIsOnline'
@@ -27,6 +28,7 @@ export default function PlannerPage() {
   const [newEventOpen, setNewEventOpen] = useState(false)
   const [newTaskOpen, setNewTaskOpen] = useState(false)
   const [tagManagerOpen, setTagManagerOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editItemId, setEditItemId] = useState<string | null>(null)
   const [mobilePlanOpen, setMobilePlanOpen] = useState(false)
@@ -129,7 +131,9 @@ export default function PlannerPage() {
         onDateChange={setCurrentDate}
         onNewEvent={handleNewEvent}
         onTagManager={() => setTagManagerOpen(true)}
+        onShare={() => setShareOpen(true)}
       />
+      <ShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} />
 
       {/* Offline banner */}
       {!isOnline && (

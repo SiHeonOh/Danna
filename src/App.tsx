@@ -6,6 +6,7 @@ import AppShell from '@/components/layout/AppShell'
 import AuthPage from '@/pages/AuthPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import PlannerPage from '@/pages/PlannerPage'
+import SharedSchedulePage from '@/pages/SharedSchedulePage'
 import { usePreventInputZoom } from '@/hooks/usePreventInputZoom'
 
 function ProtectedApp() {
@@ -25,6 +26,8 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            {/* Public read-only schedule view — outside the auth gate */}
+            <Route path="/s/:token" element={<SharedSchedulePage />} />
             <Route element={<AppShell />}>
               <Route path="/" element={<ProtectedApp />} />
               <Route path="*" element={<Navigate to="/" replace />} />

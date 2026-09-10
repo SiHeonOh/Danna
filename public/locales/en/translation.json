@@ -52,7 +52,8 @@
     "exit": "EXIT",
     "inbox": "INBOX",
     "light": "LIGHT",
-    "dark": "DARK"
+    "dark": "DARK",
+    "share": "SHARE"
   },
   "calendar": {
     "allDay": "ALL\nDAY",
@@ -190,5 +191,22 @@
   },
   "flow": {
     "addTask": "+ TASK"
+  },
+  "share": {
+    "title": "Share schedule",
+    "hint": "Anyone with a link can view your schedule in full — read-only, no account needed. Revoke a link any time to cut off access.",
+    "labelPlaceholder": "Label (e.g. Study group)",
+    "create": "CREATE LINK",
+    "active": "Active links",
+    "revoked": "Revoked",
+    "empty": "No share links yet.",
+    "untitled": "Untitled link",
+    "copy": "COPY",
+    "copied": "COPIED",
+    "revoke": "REVOKE",
+    "copyManual": "Copy this link:",
+    "readOnly": "READ-ONLY",
+    "loading": "LOADING…",
+    "invalid": "This link is invalid or has been revoked."
   }
 }

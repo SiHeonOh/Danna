@@ -13,6 +13,8 @@ interface AllDaySectionProps {
   onToggleExpand?: () => void
   /** Mobile week view: 44px columns — text-only rows, no checkbox/drag/add */
   compact?: boolean
+  /** Shared/public view: no drag, no checkbox, no add button */
+  readOnly?: boolean
 }
 
 // Collapsed: at most this many rows per day, then a "+N ▾" expander —
@@ -32,10 +34,12 @@ function DueTaskChip({
   block,
   onClick,
   onToggle,
+  readOnly = false,
 }: {
   block: CalendarBlock
   onClick: (block: CalendarBlock) => void
   onToggle?: (block: CalendarBlock) => void
+  readOnly?: boolean
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `due::${block.key}`,
@@ -46,8 +50,8 @@ function DueTaskChip({
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
+      {...(readOnly ? {} : listeners)}
+      {...(readOnly ? {} : attributes)}
       onClick={() => onClick(block)}
       style={{
         fontFamily: displayFont,
@@ -65,7 +69,7 @@ function DueTaskChip({
         background: `${tagColor}14`,
         borderLeft: `3px dashed ${tagColor}`,
         color: 'var(--color-text)',
-        cursor: 'grab',
+        cursor: readOnly ? 'default' : 'grab',
         opacity: isDragging ? 0.4 : block.is_completed ? 0.5 : 1,
         touchAction: 'none',
         userSelect: 'none',
@@ -76,7 +80,8 @@ function DueTaskChip({
         type="checkbox"
         className="cyber-checkbox checkbox-sm"
         checked={block.is_completed}
-        onChange={() => onToggle?.(block)}
+        disabled={readOnly}
+        onChange={() => { if (!readOnly) onToggle?.(block) }}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         style={{ borderColor: tagColor }}
@@ -107,6 +112,7 @@ export default function AllDaySection({
   expanded = true,
   onToggleExpand,
   compact = false,
+  readOnly = false,
 }: AllDaySectionProps) {
   const dayBlocks = blocks.filter((b) => b.date === date)
   // Completed tasks sink to the bottom (and behind the +N fold when collapsed)
@@ -168,7 +174,7 @@ export default function AllDaySection({
             {block.title}
           </div>
         ) : kind === 'due' ? (
-          <DueTaskChip key={block.key} block={block} onClick={onBlockClick} onToggle={onDueToggle} />
+          <DueTaskChip key={block.key} block={block} onClick={onBlockClick} onToggle={onDueToggle} readOnly={readOnly} />
         ) : (
           <div
             key={block.key}
@@ -251,7 +257,7 @@ export default function AllDaySection({
             ▴
           </button>
         )}
-        {!compact && (
+        {!compact && !readOnly && (
           <button
             onClick={() => onAddClick(date)}
             className="btn-ghost"

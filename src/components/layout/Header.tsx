@@ -17,10 +17,11 @@ interface HeaderProps {
   onDateChange: (date: Date) => void
   onNewEvent: () => void
   onTagManager: () => void
+  onShare: () => void
 }
 
 export default function Header({
-  viewMode, currentDate, onViewModeChange, onDateChange, onNewEvent, onTagManager,
+  viewMode, currentDate, onViewModeChange, onDateChange, onNewEvent, onTagManager, onShare,
 }: HeaderProps) {
   const { signOut } = useAuth()
   const isMobile = useIsMobile()
@@ -225,6 +226,7 @@ export default function Header({
                 }}
               >
                 {[
+                  { label: t('nav.share'), action: onShare },
                   { label: t('nav.tags'), action: onTagManager },
                   { label: isKorean ? 'ENGLISH' : '한국어', action: toggleLanguage },
                   { label: theme === 'dark' ? '◑ LIGHT' : '◐ DARK', action: toggleTheme },
@@ -241,7 +243,7 @@ export default function Header({
                       background: 'transparent',
                       color: 'var(--color-text)',
                       border: 'none',
-                      borderBottom: i < 3 ? '1px solid var(--color-border)' : 'none',
+                      borderBottom: i < 4 ? '1px solid var(--color-border)' : 'none',
                       cursor: 'pointer',
                       letterSpacing: '0.08em',
                     }}
@@ -255,6 +257,14 @@ export default function Header({
         </>
       ) : (
         <>
+          <button
+            className="btn-ghost"
+            style={{ padding: '5px 12px', fontSize: 13, flexShrink: 0 }}
+            onClick={onShare}
+          >
+            {t('nav.share')}
+          </button>
+
           <button
             className="btn-ghost"
             style={{ padding: '5px 12px', fontSize: 13, flexShrink: 0 }}

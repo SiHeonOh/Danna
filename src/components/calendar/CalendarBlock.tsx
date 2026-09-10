@@ -12,6 +12,7 @@ interface CalendarBlockProps {
   isDragging: boolean
   onDoubleClick: (block: CalendarBlockType) => void
   onCompleteInstance?: (block: CalendarBlockType) => void
+  readOnly?: boolean
 }
 
 function hexWithAlpha(hex: string, alpha: number): string {
@@ -36,6 +37,7 @@ export default function CalendarBlock({
   isDragging,
   onDoubleClick,
   onCompleteInstance,
+  readOnly = false,
 }: CalendarBlockProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: block.key,
@@ -79,16 +81,16 @@ export default function CalendarBlock({
   return (
     <div
       ref={setNodeRef}
-      {...(isMobile ? {} : listeners)}
-      {...attributes}
+      {...(isMobile || readOnly ? {} : listeners)}
+      {...(readOnly ? {} : attributes)}
       className={`calendar-block ${block.item.type === 'task' ? 'calendar-block-task' : 'calendar-block-event'}`}
-      style={style}
-      onDoubleClick={!isMobile ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
-      onClick={isMobile ? handleDoubleTap : undefined}
+      style={{ ...style, cursor: readOnly ? 'default' : style.cursor }}
+      onDoubleClick={!isMobile && !readOnly ? (e) => { e.stopPropagation(); onDoubleClick(block) } : undefined}
+      onClick={isMobile && !readOnly ? handleDoubleTap : undefined}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 5, height: '100%' }}>
         {/* Mobile-only drag handle — touch-action:none scoped to this strip only */}
-        {isMobile && (
+        {isMobile && !readOnly && (
           <div
             {...listeners}
             className="calendar-block-handle"
@@ -110,7 +112,8 @@ export default function CalendarBlock({
             type="checkbox"
             className="cyber-checkbox"
             checked={completed}
-            onChange={(e) => { e.stopPropagation(); onCompleteInstance?.(block) }}
+            disabled={readOnly}
+            onChange={(e) => { e.stopPropagation(); if (!readOnly) onCompleteInstance?.(block) }}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             style={{
@@ -192,7 +195,7 @@ export default function CalendarBlock({
           )}
         </div>
       </div>
-      <BlockResizeHandle blockKey={block.key} />
+      {!readOnly && <BlockResizeHandle blockKey={block.key} />}
     </div>
   )
 }
